@@ -2896,6 +2896,10 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const handleNavigate = (view: ViewType, _id?: string) => {
+    store.navigateTo(view);
+  };
+
   // Render current view
   const renderView = () => {
     switch (store.currentView) {
