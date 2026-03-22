@@ -30,7 +30,8 @@ import {
   BrainCircuit,
   Wand2,
   Clock3,
-  Menu
+  Menu,
+  Share2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDashboardStore } from '@/hooks/useDashboardStore';
@@ -583,12 +584,81 @@ function ClipboardView({ store }: { store: ReturnType<typeof useDashboardStore> 
     await navigator.clipboard.writeText(content);
   };
 
+  const shareClip = async (clip: { title?: string; content: string }) => {
+    const text = clip.title ? `${clip.title}\n\n${clip.content}` : clip.content;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: clip.title || 'Clip', text });
+      } catch { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(text);
+    }
+  };
+
+  const ClipCard = ({ clip, isPinned }: { clip: typeof store.clips[0]; isPinned: boolean }) => (
+    <div className={cn(
+      'p-4 rounded-lg border',
+      isPinned ? 'bg-gold/5 border-gold/20' : 'bg-card border-border'
+    )}>
+      {/* Top: Title + Tags side by side */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          {clip.title && <div className="font-medium truncate">{clip.title}</div>}
+          <div className="text-sm text-muted-foreground font-mono line-clamp-2 mt-1">{clip.content}</div>
+        </div>
+        {clip.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 shrink-0">
+            {clip.tags.map(tag => (
+              <span key={tag} className="text-xs px-2 py-0.5 bg-muted rounded whitespace-nowrap">{tag}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Bottom: Action buttons — big touch targets */}
+      <div className="flex items-center gap-1 mt-3 pt-3 border-t border-border/50">
+        <button
+          onClick={() => store.togglePinClip(clip.id)}
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+            isPinned ? 'text-gold bg-gold/10 hover:bg-gold/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+          )}
+          title={isPinned ? 'Unpin' : 'Pin'}
+        >
+          <Pin className={cn('w-5 h-5', isPinned && 'fill-current')} />
+        </button>
+        <button
+          onClick={() => copyToClipboard(clip.content)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          title="Copy"
+        >
+          <Copy className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => shareClip(clip)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          title="Share"
+        >
+          <Share2 className="w-5 h-5" />
+        </button>
+        <div className="flex-1" />
+        <button
+          onClick={() => store.deleteClip(clip.id)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-red-500/70 hover:bg-red-500/10 hover:text-red-500 transition-colors"
+          title="Delete"
+        >
+          <Trash2 className="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6 overflow-y-auto h-full">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Clipboard</h1>
-          <p className="text-muted-foreground">Cross-session clipboard with pins and tags</p>
+          <p className="text-muted-foreground text-sm">Cross-session clipboard with pins and tags</p>
         </div>
       </div>
 
@@ -616,44 +686,9 @@ function ClipboardView({ store }: { store: ReturnType<typeof useDashboardStore> 
           <h3 className="text-sm font-medium text-gold mb-3 flex items-center gap-2">
             <Pin className="w-4 h-4" /> Pinned
           </h3>
-          <div className="grid gap-2">
+          <div className="grid gap-3">
             {pinnedClips.map(clip => (
-              <div key={clip.id} className="p-4 bg-gold/5 border border-gold/20 rounded-lg">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    {clip.title && <div className="font-medium mb-1">{clip.title}</div>}
-                    <div className="text-sm text-muted-foreground font-mono">{clip.content}</div>
-                    <div className="flex gap-2 mt-2">
-                      {clip.tags.map(tag => (
-                        <span key={tag} className="text-xs px-2 py-0.5 bg-muted rounded">{tag}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <button 
-                      onClick={() => copyToClipboard(clip.content)}
-                      className="p-2 hover:bg-muted rounded"
-                      title="Copy"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => store.togglePinClip(clip.id)}
-                      className="p-2 hover:bg-muted rounded text-gold"
-                      title="Unpin"
-                    >
-                      <Pin className="w-4 h-4 fill-current" />
-                    </button>
-                    <button 
-                      onClick={() => store.deleteClip(clip.id)}
-                      className="p-2 hover:bg-muted rounded text-red-500"
-                      title="Delete"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <ClipCard key={clip.id} clip={clip} isPinned />
             ))}
           </div>
         </div>
@@ -662,39 +697,9 @@ function ClipboardView({ store }: { store: ReturnType<typeof useDashboardStore> 
       {/* Regular Clips */}
       <div>
         <h3 className="text-sm font-medium text-muted-foreground mb-3">History</h3>
-        <div className="grid gap-2">
+        <div className="grid gap-3">
           {regularClips.map(clip => (
-            <div key={clip.id} className="p-4 bg-card border border-border rounded-lg">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  {clip.title && <div className="font-medium mb-1">{clip.title}</div>}
-                  <div className="text-sm text-muted-foreground font-mono">{clip.content}</div>
-                </div>
-                <div className="flex gap-1">
-                  <button 
-                    onClick={() => copyToClipboard(clip.content)}
-                    className="p-2 hover:bg-muted rounded"
-                    title="Copy"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => store.togglePinClip(clip.id)}
-                    className="p-2 hover:bg-muted rounded"
-                    title="Pin"
-                  >
-                    <Pin className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => store.deleteClip(clip.id)}
-                    className="p-2 hover:bg-muted rounded text-red-500"
-                    title="Delete"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ClipCard key={clip.id} clip={clip} isPinned={false} />
           ))}
           {regularClips.length === 0 && (
             <p className="text-muted-foreground text-center py-8">No clips yet</p>
