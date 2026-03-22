@@ -29,7 +29,8 @@ import {
   Globe,
   BrainCircuit,
   Wand2,
-  Clock3
+  Clock3,
+  Menu
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDashboardStore } from '@/hooks/useDashboardStore';
@@ -2883,6 +2884,7 @@ function SettingsView({ store }: { store: ReturnType<typeof useDashboardStore> }
 function App() {
   const store = useDashboardStore();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Keyboard shortcut for search
   useEffect(() => {
@@ -2945,14 +2947,36 @@ function App() {
 
   return (
     <div className="h-screen flex bg-background text-foreground overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar 
-        currentView={store.currentView} 
-        onNavigate={store.navigateTo}
-        onOpenSearch={() => setSearchOpen(true)}
-        stats={store.stats}
-        customPages={store.customPages}
-      />
+      {/* Mobile hamburger button */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="md:hidden fixed top-3 left-3 z-50 p-2 bg-card border border-border rounded-lg shadow-lg"
+        aria-label="Open menu"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar — hidden on mobile unless open */}
+      <div className={cn(
+        'fixed md:relative z-50 md:z-auto h-full transition-transform duration-200',
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      )}>
+        <Sidebar
+          currentView={store.currentView}
+          onNavigate={(view) => { store.navigateTo(view); setSidebarOpen(false); }}
+          onOpenSearch={() => { setSearchOpen(true); setSidebarOpen(false); }}
+          stats={store.stats}
+          customPages={store.customPages}
+        />
+      </div>
 
       {/* Main Content */}
       <main className="flex-1 overflow-hidden">
@@ -2960,8 +2984,8 @@ function App() {
       </main>
 
       {/* Unified Search Modal */}
-      <UnifiedSearch 
-        isOpen={searchOpen} 
+      <UnifiedSearch
+        isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
         onNavigate={handleNavigate}
         store={store}
