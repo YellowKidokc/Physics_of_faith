@@ -2440,8 +2440,11 @@ function AxiomsView() {
 
   return (
     <div className="h-full flex">
-      {/* Axiom List */}
-      <div className="w-80 border-r border-border overflow-y-auto">
+      {/* Axiom List — hidden on mobile when an axiom is selected */}
+      <div className={cn(
+        'w-full md:w-80 border-r border-border overflow-y-auto shrink-0',
+        selectedAxiomId ? 'hidden md:block' : 'block'
+      )}>
         <div className="p-4 border-b border-border">
           <h2 className="font-semibold">Axioms</h2>
           <p className="text-sm text-muted-foreground">{axioms.length} loaded</p>
@@ -2461,7 +2464,7 @@ function AxiomsView() {
                   {String(axiom.chainPosition).padStart(3, '0')}
                 </span>
                 <span className="font-medium">{axiom.id}</span>
-                <div 
+                <div
                   className={cn(
                     'w-2 h-2 rounded-full ml-auto',
                     axiom.status === 'validated' && 'bg-emerald-500',
@@ -2477,10 +2480,21 @@ function AxiomsView() {
         </div>
       </div>
 
-      {/* Axiom Detail */}
-      <div className="flex-1 overflow-y-auto p-6">
+      {/* Axiom Detail — full width on mobile when selected */}
+      <div className={cn(
+        'flex-1 overflow-y-auto p-6',
+        selectedAxiomId ? 'block' : 'hidden md:block'
+      )}>
         {selectedAxiom ? (
           <div className="space-y-6">
+            {/* Back button — mobile only */}
+            <button
+              onClick={() => setSelectedAxiomId(null)}
+              className="md:hidden flex items-center gap-2 text-sm text-gold mb-2"
+            >
+              <ChevronRight className="w-4 h-4 rotate-180" />
+              Back to list
+            </button>
             <div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                 <span>Master Index</span>
@@ -2514,7 +2528,7 @@ function AxiomsView() {
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="p-4 bg-card border border-border rounded-lg text-center">
                 <div className="text-2xl font-bold text-red-400">{selectedAxiom.analytics.contradictions}</div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Contradictions</div>
