@@ -215,13 +215,17 @@ export interface SearchResult {
 }
 
 // ─── AI TYPES ───
-export type AiProvider = 'anthropic' | 'openai' | 'ollama';
+export type AiProvider = 'anthropic' | 'openai' | 'ollama' | 'xai';
 export type AiRole = 'interface' | 'logic' | 'copilot';
 export type AiRoleRouting = 'shared' | 'split';
 
 export interface ChatTurn {
+  id: string;
   role: 'user' | 'assistant';
   content: string;
+  createdAt: string;
+  provider?: AiProvider;
+  contextSummary?: string[];
 }
 
 export interface AiStreamCallbacks {

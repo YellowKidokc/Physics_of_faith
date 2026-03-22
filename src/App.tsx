@@ -24,13 +24,18 @@ import {
   Trash2,
   Edit3,
   Zap,
-  AlertCircle
+  AlertCircle,
+  Sparkles,
+  Globe,
+  BrainCircuit,
+  Wand2,
+  Clock3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDashboardStore } from '@/hooks/useDashboardStore';
 import { useUnifiedSearch } from '@/hooks/useUnifiedSearch';
 import { axioms, getAxiomById } from '@/data/axioms';
-import type { ViewType, SearchResult, Task, Prompt, Bookmark, CustomPage } from '@/types';
+import type { ViewType, SearchResult, Task, Prompt, Bookmark, CustomPage, ChatTurn, AiProvider, AiRole } from '@/types';
 
 // ─── VIEW CONFIGURATION ───
 const VIEWS: { id: ViewType; label: string; icon: React.ElementType; color: string }[] = [
@@ -972,11 +977,31 @@ function PromptsView({ store }: { store: ReturnType<typeof useDashboardStore> })
 
 // ─── RESEARCH LINKS VIEW ───
 function ResearchView({ store }: { store: ReturnType<typeof useDashboardStore> }) {
+  const SEARCH_HISTORY_KEY = 'pof2828_research_search_history';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [formData, setFormData] = useState({ title: '', url: '', category: '', tags: '' });
+  const [searchPreset, setSearchPreset] = useState<'general' | 'dev' | 'academic' | 'obsidian' | 'datasets' | 'docs'>('general');
+  const [history, setHistory] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(SEARCH_HISTORY_KEY);
+      if (stored) setHistory(JSON.parse(stored));
+    } catch (error) {
+      console.error('Failed to load search history:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
+    } catch (error) {
+      console.error('Failed to save search history:', error);
+    }
+  }, [history]);
 
   const categories = ['all', ...Array.from(new Set(store.bookmarks.map(b => b.category || 'General')))];
 
@@ -988,6 +1013,15 @@ function ResearchView({ store }: { store: ReturnType<typeof useDashboardStore> }
     }
     return true;
   });
+
+  const presets = {
+    general: { label: 'General', filter: '' },
+    dev: { label: 'Dev / Code', filter: '(site:github.com OR site:stackoverflow.com OR site:dev.to)' },
+    academic: { label: 'Academic', filter: '(site:arxiv.org OR site:scholar.google.com) filetype:pdf' },
+    obsidian: { label: 'Obsidian', filter: '(site:github.com OR site:forum.obsidian.md OR site:obsidian.md)' },
+    datasets: { label: 'Data / Datasets', filter: '(site:kaggle.com OR site:data.gov) (filetype:csv OR filetype:xlsx OR filetype:json)' },
+    docs: { label: 'Docs', filter: '(filetype:pdf OR filetype:docx)' },
+  } as const;
 
   const catColors: Record<string, string> = {
     'theophysics': '#f59e0b', 'infrastructure': '#3b82f6', 'research': '#10b981',
@@ -1034,14 +1068,35 @@ function ResearchView({ store }: { store: ReturnType<typeof useDashboardStore> }
     await navigator.clipboard.writeText(url);
   };
 
+  const builtSearch = [searchQuery.trim(), presets[searchPreset].filter].filter(Boolean).join(' ').trim();
+
+  const saveSearchToHistory = (query: string) => {
+    if (!query) return;
+    setHistory(prev => [query, ...prev.filter(item => item !== query)].slice(0, 8));
+  };
+
+  const openSearchTarget = (target: 'google' | 'exa' | 'crawler') => {
+    if (!builtSearch) return;
+    saveSearchToHistory(builtSearch);
+    const encoded = encodeURIComponent(builtSearch);
+    const urls = {
+      google: `https://www.google.com/search?q=${encoded}`,
+      exa: `https://exa.ai/search?q=${encoded}`,
+      crawler: `https://searcht1.com/search?q=${encoded}`,
+    };
+    window.open(urls[target], '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between mb-3">
+      <div className="p-4 border-b border-border space-y-4">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold">Research Links</h1>
-            <p className="text-xs text-muted-foreground">{filteredBookmarks.length} bookmarks</p>
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              <Globe className="w-5 h-5 text-blue-400" />
+              Research Links + Search
+            </h1>
+            <p className="text-xs text-muted-foreground">Bookmark library plus smart search presets that build the query string for you.</p>
           </div>
           <button
             onClick={openCreateModal}
@@ -1051,42 +1106,99 @@ function ResearchView({ store }: { store: ReturnType<typeof useDashboardStore> }
           </button>
         </div>
 
-        {/* Search */}
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search links..."
-            className="w-full pl-9 pr-3 py-2 bg-muted rounded-lg text-sm outline-none focus:ring-1 focus:ring-gold/50"
-          />
+        <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {(Object.entries(presets) as [keyof typeof presets, typeof presets[keyof typeof presets]][]).map(([key, preset]) => (
+              <button
+                key={key}
+                onClick={() => setSearchPreset(key)}
+                className={cn(
+                  'rounded-full border px-3 py-1.5 text-xs transition-colors',
+                  searchPreset === key ? 'border-blue-500 bg-blue-500/10 text-blue-400' : 'border-border text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search the web with preset-aware filters..."
+                className="w-full pl-9 pr-3 py-3 bg-muted rounded-lg text-sm outline-none focus:ring-1 focus:ring-gold/50"
+              />
+            </div>
+            <button onClick={() => openSearchTarget('google')} disabled={!builtSearch} className="rounded-lg bg-blue-500 px-4 py-3 text-sm font-medium text-white disabled:opacity-40">Google</button>
+            <button onClick={() => openSearchTarget('exa')} disabled={!builtSearch} className="rounded-lg border border-cyan-500/40 px-4 py-3 text-sm font-medium text-cyan-400 disabled:opacity-40">Exa</button>
+            <button onClick={() => openSearchTarget('crawler')} disabled={!builtSearch} className="rounded-lg border border-emerald-500/40 px-4 py-3 text-sm font-medium text-emerald-400 disabled:opacity-40">Smart Crawler</button>
+          </div>
+
+          <div className="rounded-lg border border-dashed border-border px-3 py-3 text-sm text-muted-foreground">
+            <span className="mr-2 text-[10px] uppercase tracking-[0.2em]">Built query</span>
+            <span className="text-foreground">{builtSearch || 'Choose a preset and enter a query to build the final search string.'}</span>
+          </div>
+
+          {history.length > 0 && (
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <Clock3 className="w-3.5 h-3.5" />
+                Search history
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {history.map(item => (
+                  <button
+                    key={item}
+                    onClick={() => setSearchQuery(item)}
+                    className="rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Category Tabs */}
-        <div className="flex gap-1 overflow-x-auto">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={cn(
-                "px-3 py-1.5 rounded text-[10px] font-medium tracking-wider whitespace-nowrap transition-colors",
-                selectedCategory === cat
-                  ? "text-blue-500 border-b-2 border-blue-500"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {cat.toUpperCase()}
-            </button>
-          ))}
+        <div>
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Filter saved bookmarks..."
+              className="w-full pl-9 pr-3 py-2 bg-muted rounded-lg text-sm outline-none focus:ring-1 focus:ring-gold/50"
+            />
+          </div>
+
+          <div className="flex gap-1 overflow-x-auto">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={cn(
+                  'px-3 py-1.5 rounded text-[10px] font-medium tracking-wider whitespace-nowrap transition-colors',
+                  selectedCategory === cat
+                    ? 'text-blue-500 border-b-2 border-blue-500'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {cat.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Bookmark List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
         {filteredBookmarks.map(bookmark => (
-          <div 
-            key={bookmark.id} 
+          <div
+            key={bookmark.id}
             className="p-3 bg-card border border-border rounded-lg"
             style={{ borderLeftColor: getCatColor(bookmark.category || ''), borderLeftWidth: '3px' }}
           >
@@ -1132,7 +1244,6 @@ function ResearchView({ store }: { store: ReturnType<typeof useDashboardStore> }
         )}
       </div>
 
-      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-md mx-4 bg-card border border-border rounded-xl p-6">
@@ -1902,114 +2013,419 @@ function FilesView({ store }: { store: ReturnType<typeof useDashboardStore> }) {
 }
 
 // ─── AI AGENT VIEW ───
-function AIAgentView() {
-  const [messages, setMessages] = useState<{role: 'user' | 'assistant'; content: string}[]>([]);
+function AIAgentView({ store }: { store: ReturnType<typeof useDashboardStore> }) {
+  const AI_HISTORY_KEY = 'pof2828_ai_chat_history';
+  const AI_SETTINGS_KEY = 'pof2828_ai_chat_settings';
+  const [messages, setMessages] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [provider, setProvider] = useState<AiProvider>('openai');
+  const [role, setRole] = useState<AiRole>('copilot');
+  const [selectedPromptId, setSelectedPromptId] = useState<string>('');
+  const [includeClips, setIncludeClips] = useState(true);
+  const [includeNotes, setIncludeNotes] = useState(true);
+  const [includeTasks, setIncludeTasks] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const selectedPrompt = store.prompts.find(prompt => prompt.id === selectedPromptId) || null;
 
   useEffect(() => {
-    scrollToBottom();
+    try {
+      const storedMessages = localStorage.getItem(AI_HISTORY_KEY);
+      const storedSettings = localStorage.getItem(AI_SETTINGS_KEY);
+      if (storedMessages) {
+        setMessages(JSON.parse(storedMessages));
+      }
+      if (storedSettings) {
+        const parsed = JSON.parse(storedSettings) as {
+          provider?: AiProvider;
+          role?: AiRole;
+          includeClips?: boolean;
+          includeNotes?: boolean;
+          includeTasks?: boolean;
+          selectedPromptId?: string;
+        };
+        setProvider(parsed.provider || 'openai');
+        setRole(parsed.role || 'copilot');
+        setIncludeClips(parsed.includeClips ?? true);
+        setIncludeNotes(parsed.includeNotes ?? true);
+        setIncludeTasks(parsed.includeTasks ?? true);
+        setSelectedPromptId(parsed.selectedPromptId || '');
+      }
+    } catch (error) {
+      console.error('Failed to load AI panel state:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(AI_HISTORY_KEY, JSON.stringify(messages));
+    } catch (error) {
+      console.error('Failed to save AI chat history:', error);
+    }
   }, [messages]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(AI_SETTINGS_KEY, JSON.stringify({
+        provider,
+        role,
+        includeClips,
+        includeNotes,
+        includeTasks,
+        selectedPromptId,
+      }));
+    } catch (error) {
+      console.error('Failed to save AI chat settings:', error);
+    }
+  }, [provider, role, includeClips, includeNotes, includeTasks, selectedPromptId]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
+
+  const contextPackets = useMemo(() => {
+    const packets: string[] = [];
+    if (includeClips) {
+      store.clips.slice(0, 3).forEach(clip => {
+        packets.push(`Clip: ${clip.title || clip.content.slice(0, 40)} → ${clip.content.slice(0, 120)}`);
+      });
+    }
+    if (includeNotes) {
+      store.notes.slice(0, 2).forEach(note => {
+        packets.push(`Note: ${note.title} → ${note.content.replace(/\s+/g, ' ').slice(0, 140)}`);
+      });
+    }
+    if (includeTasks) {
+      store.tasks.filter(task => !task.done).slice(0, 3).forEach(task => {
+        packets.push(`Task: ${task.title}${task.due ? ` (due ${task.due})` : ''}`);
+      });
+    }
+    return packets;
+  }, [includeClips, includeNotes, includeTasks, store.clips, store.notes, store.tasks]);
+
+  const applyPrompt = () => {
+    if (!selectedPrompt) return;
+    setInput(prev => prev ? `${prev}
+
+${selectedPrompt.template}` : selectedPrompt.template);
+  };
+
+  const clearConversation = () => {
+    setMessages([]);
+    try {
+      localStorage.removeItem(AI_HISTORY_KEY);
+    } catch (error) {
+      console.error('Failed to clear AI chat history:', error);
+    }
+  };
+
+  const buildAssistantReply = (userMessage: string) => {
+    const normalized = userMessage.toLowerCase();
+    const created: string[] = [];
+
+    if (normalized.includes('add task') || normalized.includes('create task')) {
+      const taskTitle = userMessage
+        .replace(/.*(?:add task|create task)[:\-]?/i, '')
+        .trim() || 'Follow up on AI workflow';
+      store.addTask(taskTitle, undefined, '2');
+      created.push(`Task created: ${taskTitle}`);
+    }
+
+    if (normalized.includes('save note') || normalized.includes('create note')) {
+      const noteTitle = userMessage
+        .replace(/.*(?:save note|create note)[:\-]?/i, '')
+        .trim() || 'AI Session Note';
+      store.addNote(noteTitle, `Captured from AI panel on ${new Date().toLocaleString()}`, ['ai']);
+      created.push(`Note created: ${noteTitle}`);
+    }
+
+    if (normalized.includes('save clip') || normalized.includes('add clip')) {
+      const clipContent = userMessage
+        .replace(/.*(?:save clip|add clip)[:\-]?/i, '')
+        .trim() || 'Captured from AI panel';
+      store.addClip(clipContent, 'AI clip', ['ai']);
+      created.push(`Clip saved: ${clipContent.slice(0, 48)}`);
+    }
+
+    const promptLine = selectedPrompt ? `Prompt library injection: ${selectedPrompt.name}.` : 'No prompt preset attached.';
+    const contextLine = contextPackets.length > 0
+      ? `Context injected from dashboard memory (${contextPackets.length} items).`
+      : 'No dashboard context injected.';
+    const routingLine = `Provider route ready: ${provider.toUpperCase()} · role ${role}.`;
+
+    const replySections = [
+      routingLine,
+      promptLine,
+      contextLine,
+      created.length > 0
+        ? `Dispatcher actions completed: ${created.join(' · ')}.`
+        : 'Dispatcher standing by — ask me to add a task, save a note, or store a clip.',
+      'Next step: connect this panel to a streaming Worker endpoint so the same UI can switch from local mock mode to real provider responses without redesign.',
+    ];
+
+    return {
+      fullText: replySections.join('\n\n'),
+      created,
+    };
+  };
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
-    const userMessage = input.trim();
+    const userMessage: ChatTurn = {
+      id: `chat_${Date.now()}`,
+      role: 'user',
+      content: input.trim(),
+      createdAt: new Date().toISOString(),
+      provider,
+      contextSummary: contextPackets,
+    };
+
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'This is a placeholder response. The AI agent will be integrated with the existing ai.ts service.' 
-      }]);
-      setIsLoading(false);
-    }, 1000);
+    const { fullText } = buildAssistantReply(userMessage.content);
+    const assistantId = `chat_${Date.now()}_assistant`;
+    const assistantShell: ChatTurn = {
+      id: assistantId,
+      role: 'assistant',
+      content: '',
+      createdAt: new Date().toISOString(),
+      provider,
+      contextSummary: contextPackets,
+    };
+
+    setMessages(prev => [...prev, assistantShell]);
+
+    let cursor = 0;
+    const interval = window.setInterval(() => {
+      cursor += Math.max(8, Math.floor(fullText.length / 18));
+      const nextChunk = fullText.slice(0, cursor);
+      setMessages(prev => prev.map(message => (
+        message.id === assistantId ? { ...message, content: nextChunk } : message
+      )));
+
+      if (cursor >= fullText.length) {
+        window.clearInterval(interval);
+        setIsLoading(false);
+      }
+    }, 60);
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b border-border">
-        <h1 className="text-2xl font-bold">AI Agent</h1>
-        <p className="text-muted-foreground">Personal AI assistant with context from your notes and clips</p>
+    <div className="h-full flex flex-col xl:flex-row">
+      <div className="w-full xl:w-80 border-b xl:border-b-0 xl:border-r border-border bg-muted/20">
+        <div className="p-4 border-b border-border space-y-4">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <BrainCircuit className="w-6 h-6 text-cyan-400" />
+              AI Control Panel
+            </h1>
+            <p className="text-sm text-muted-foreground">Streaming-ready local shell with provider routing, prompt injection, and dashboard context.</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {([
+              { value: 'openai', label: 'OpenAI' },
+              { value: 'xai', label: 'xAI / Grok' },
+              { value: 'anthropic', label: 'Anthropic' },
+              { value: 'ollama', label: 'Ollama' },
+            ] as { value: AiProvider; label: string }[]).map(option => (
+              <button
+                key={option.value}
+                onClick={() => setProvider(option.value)}
+                className={cn(
+                  'rounded-lg border px-3 py-2 text-left transition-colors',
+                  provider === option.value ? 'border-cyan-500 bg-cyan-500/10 text-cyan-300' : 'border-border text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <div className="font-medium">{option.label}</div>
+                <div className="text-[10px] uppercase tracking-wider opacity-70">provider</div>
+              </button>
+            ))}
+          </div>
+
+          <div>
+            <div className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Role routing</div>
+            <div className="flex gap-2 flex-wrap">
+              {(['interface', 'logic', 'copilot'] as AiRole[]).map(option => (
+                <button
+                  key={option}
+                  onClick={() => setRole(option)}
+                  className={cn(
+                    'rounded-full border px-3 py-1.5 text-xs capitalize transition-colors',
+                    role === option ? 'border-gold bg-gold/10 text-gold' : 'border-border text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Prompt library</div>
+            <div className="flex gap-2">
+              <select
+                value={selectedPromptId}
+                onChange={(e) => setSelectedPromptId(e.target.value)}
+                className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none"
+              >
+                <option value="">No preset</option>
+                {store.prompts.map(prompt => (
+                  <option key={prompt.id} value={prompt.id}>{prompt.name} — {prompt.short}</option>
+                ))}
+              </select>
+              <button
+                onClick={applyPrompt}
+                disabled={!selectedPrompt}
+                className="rounded-lg border border-gold/30 bg-gold/10 px-3 py-2 text-xs font-medium text-gold disabled:opacity-40"
+              >
+                Inject
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Context sources</div>
+            <div className="space-y-2 text-sm">
+              {[
+                { label: 'Clips', value: includeClips, onChange: setIncludeClips, count: store.clips.length },
+                { label: 'Notes', value: includeNotes, onChange: setIncludeNotes, count: store.notes.length },
+                { label: 'Tasks', value: includeTasks, onChange: setIncludeTasks, count: store.tasks.filter(task => !task.done).length },
+              ].map(item => (
+                <label key={item.label} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+                  <div>
+                    <div className="font-medium">{item.label}</div>
+                    <div className="text-xs text-muted-foreground">{item.count} available</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={item.value}
+                    onChange={(e) => item.onChange(e.target.checked)}
+                    className="h-4 w-4 accent-cyan-500"
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Injected preview</div>
+            <button onClick={clearConversation} className="text-xs text-muted-foreground hover:text-red-400">Clear chat</button>
+          </div>
+          <div className="space-y-2 text-xs text-muted-foreground max-h-56 overflow-y-auto pr-1">
+            {contextPackets.length > 0 ? contextPackets.map(packet => (
+              <div key={packet} className="rounded-lg border border-border bg-card px-3 py-2">
+                {packet}
+              </div>
+            )) : (
+              <div className="rounded-lg border border-dashed border-border px-3 py-4 text-center">Enable a source to inject dashboard context.</div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        {messages.length === 0 && (
-          <div className="text-center text-muted-foreground py-12">
-            <Bot className="w-12 h-12 mx-auto mb-4 opacity-30" />
-            <p>Start a conversation with your AI agent</p>
-            <p className="text-sm mt-2">The agent has access to your clips, notes, and tags</p>
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="p-6 border-b border-border flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold">Conversation</h2>
+            <p className="text-sm text-muted-foreground">Chat history persists in localStorage and is ready for a Worker-backed streaming endpoint.</p>
           </div>
-        )}
-        {messages.map((msg, i) => (
-          <div 
-            key={i} 
-            className={cn(
-              'flex gap-4',
-              msg.role === 'user' ? 'flex-row-reverse' : ''
-            )}
-          >
-            <div className={cn(
-              'w-8 h-8 rounded-full flex items-center justify-center shrink-0',
-              msg.role === 'user' ? 'bg-gold text-black' : 'bg-cyan-500/20 text-cyan-400'
-            )}>
-              {msg.role === 'user' ? 'You' : <Bot className="w-4 h-4" />}
-            </div>
-            <div className={cn(
-              'max-w-[70%] p-4 rounded-xl',
-              msg.role === 'user' 
-                ? 'bg-gold/10 text-foreground' 
-                : 'bg-card border border-border'
-            )}>
-              <div className="whitespace-pre-wrap">{msg.content}</div>
-            </div>
+          <div className="flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            {messages.length} turns stored
           </div>
-        ))}
-        {isLoading && (
-          <div className="flex gap-4">
-            <div className="w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
-              <Bot className="w-4 h-4" />
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {messages.length === 0 && (
+            <div className="text-center text-muted-foreground py-16">
+              <Bot className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p className="text-base">Start a conversation with dashboard memory attached.</p>
+              <p className="text-sm mt-2">Example: “Add task: wire Cloudflare Worker proxy” or “Save note: MCP tool ideas”.</p>
             </div>
-            <div className="bg-card border border-border p-4 rounded-xl">
-              <div className="flex gap-1">
-                <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
-                <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce delay-100" />
-                <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce delay-200" />
+          )}
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={cn('flex gap-4', msg.role === 'user' ? 'flex-row-reverse' : '')}
+            >
+              <div className={cn(
+                'w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-xs font-semibold',
+                msg.role === 'user' ? 'bg-gold text-black' : 'bg-cyan-500/20 text-cyan-300'
+              )}>
+                {msg.role === 'user' ? 'You' : <Bot className="w-4 h-4" />}
+              </div>
+              <div className={cn(
+                'max-w-[80%] rounded-2xl border px-4 py-3',
+                msg.role === 'user' ? 'border-gold/20 bg-gold/10' : 'border-border bg-card'
+              )}>
+                <div className="mb-2 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  <span>{msg.role}</span>
+                  {msg.provider && <span>· {msg.provider}</span>}
+                  <span>· {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <div className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content || '…'}</div>
+                {msg.contextSummary && msg.contextSummary.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {msg.contextSummary.slice(0, 3).map(item => (
+                      <span key={item} className="rounded-full bg-muted px-2 py-1 text-[10px] text-muted-foreground">{item.slice(0, 48)}</span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+          ))}
+          {isLoading && (
+            <div className="flex gap-4">
+              <div className="w-9 h-9 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center">
+                <Bot className="w-4 h-4" />
+              </div>
+              <div className="bg-card border border-border p-4 rounded-2xl">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
+                  <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce delay-100" />
+                  <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce delay-200" />
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
 
-      {/* Input */}
-      <div className="p-4 border-t border-border">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Ask anything..."
-            className="flex-1 px-4 py-3 bg-card border border-border rounded-lg outline-none focus:border-cyan-500"
-          />
-          <button
-            onClick={sendMessage}
-            disabled={isLoading || !input.trim()}
-            className="px-4 py-3 bg-cyan-500 text-black rounded-lg font-medium disabled:opacity-50"
-          >
-            Send
-          </button>
+        <div className="p-4 border-t border-border space-y-3">
+          {selectedPrompt && (
+            <div className="rounded-xl border border-gold/20 bg-gold/5 px-4 py-3 text-sm">
+              <div className="font-medium text-gold">Active prompt preset: {selectedPrompt.name}</div>
+              <div className="text-muted-foreground mt-1 line-clamp-2">{selectedPrompt.short}</div>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              placeholder="Ask anything, or issue a command like 'Add task: build MCP tools'..."
+              className="min-h-[88px] flex-1 resize-none rounded-xl border border-border bg-card px-4 py-3 outline-none focus:border-cyan-500"
+            />
+            <button
+              onClick={sendMessage}
+              disabled={isLoading || !input.trim()}
+              className="self-end rounded-xl bg-cyan-500 px-5 py-3 font-medium text-black disabled:opacity-50"
+            >
+              Send
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -2136,11 +2552,40 @@ function CustomPagesView({ store }: { store: ReturnType<typeof useDashboardStore
   const [editingPage, setEditingPage] = useState<CustomPage | null>(null);
   const [title, setTitle] = useState('');
   const [html, setHtml] = useState('');
+  const [description, setDescription] = useState('');
+
+  const generateHtmlFromPrompt = (prompt: string) => {
+    const safePrompt = prompt.trim() || 'Untitled custom page';
+    const headline = safePrompt.split(/[.!?]/)[0].slice(0, 72) || 'Custom Page';
+    const bullets = safePrompt
+      .split(/[,.;\n]/)
+      .map(part => part.trim())
+      .filter(Boolean)
+      .slice(0, 4);
+
+    return `<div style="font-family: Inter, Arial, sans-serif; min-height: 100vh; background: linear-gradient(135deg, #0f172a, #111827); color: #f8fafc; padding: 32px;">
+  <div style="max-width: 960px; margin: 0 auto; display: grid; gap: 24px;">
+    <section style="padding: 28px; border-radius: 24px; border: 1px solid rgba(34, 211, 238, 0.24); background: rgba(15, 23, 42, 0.82); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);">
+      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(34, 211, 238, 0.12); color: #67e8f9; font-size: 12px; text-transform: uppercase; letter-spacing: 0.18em;">AI Generated Layout</div>
+      <h1 style="font-size: 42px; line-height: 1.1; margin: 18px 0 12px;">${headline}</h1>
+      <p style="font-size: 18px; line-height: 1.7; color: rgba(226, 232, 240, 0.86); max-width: 780px;">${safePrompt}</p>
+    </section>
+    <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+      ${(bullets.length > 0 ? bullets : ['Hero section', 'Supporting details', 'Call to action']).map((item, index) => `<article style="padding: 20px; border-radius: 20px; background: rgba(15, 23, 42, 0.72); border: 1px solid rgba(148, 163, 184, 0.2);">
+        <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.18em; color: #facc15; margin-bottom: 10px;">Block ${index + 1}</div>
+        <h2 style="font-size: 20px; margin: 0 0 10px;">${item}</h2>
+        <p style="font-size: 14px; line-height: 1.7; color: rgba(226, 232, 240, 0.76);">Replace this with live content, embed a widget, or route messages from the comms dispatcher into this custom page.</p>
+      </article>`).join('')}
+    </section>
+  </div>
+</div>`;
+  };
 
   const startNewPage = () => {
     setIsEditing(true);
     setEditingPage(null);
     setTitle('');
+    setDescription('');
     setHtml('<div style="padding:20px">\n  <h1>My Custom Page</h1>\n  <p>Add your HTML here...</p>\n</div>');
   };
 
@@ -2148,6 +2593,7 @@ function CustomPagesView({ store }: { store: ReturnType<typeof useDashboardStore
     setIsEditing(true);
     setEditingPage(page);
     setTitle(page.title);
+    setDescription('');
     setHtml(page.html);
   };
 
@@ -2162,18 +2608,24 @@ function CustomPagesView({ store }: { store: ReturnType<typeof useDashboardStore
     }
   };
 
+  const generatePage = () => {
+    const generatedTitle = title.trim() || description.trim().split(/[.!?]/)[0].slice(0, 40) || 'AI Generated Page';
+    setTitle(generatedTitle);
+    setHtml(generateHtmlFromPrompt(description));
+  };
+
   if (isEditing) {
     return (
       <div className="h-full flex flex-col">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <button 
+        <div className="p-4 border-b border-border flex items-center justify-between gap-4">
+          <button
             onClick={() => setIsEditing(false)}
             className="text-muted-foreground hover:text-foreground"
           >
             ← Back
           </button>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={savePage}
               className="px-4 py-2 bg-gold text-black rounded-lg font-medium"
             >
@@ -2181,8 +2633,48 @@ function CustomPagesView({ store }: { store: ReturnType<typeof useDashboardStore
             </button>
           </div>
         </div>
-        <div className="flex-1 flex">
-          <div className="flex-1 flex flex-col border-r border-border">
+
+        <div className="p-4 border-b border-border bg-muted/20 grid lg:grid-cols-[1.1fr,0.9fr] gap-4">
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Page title</label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Landing page, knowledge card, dashboard widget..."
+                className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Describe the page in plain text</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe the layout, content blocks, tone, and interactions you want Codex to scaffold."
+                className="mt-1 min-h-[108px] w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none resize-none"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm">
+            <div className="flex items-center gap-2 font-medium text-cyan-300">
+              <Wand2 className="w-4 h-4" />
+              AI page builder scaffold
+            </div>
+            <p className="mt-2 text-muted-foreground">This generator stays local for now, outputs self-contained HTML, and previews inside a sandboxed iframe so you can later swap in a real model call without changing the editor flow.</p>
+            <button
+              onClick={generatePage}
+              disabled={!description.trim()}
+              className="mt-4 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 disabled:opacity-40"
+            >
+              Generate HTML
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 grid lg:grid-cols-2 min-h-0">
+          <div className="flex min-h-0 flex-col border-r border-border">
             <div className="p-2 bg-muted text-xs text-muted-foreground uppercase tracking-wider">HTML Editor</div>
             <textarea
               value={html}
@@ -2191,11 +2683,13 @@ function CustomPagesView({ store }: { store: ReturnType<typeof useDashboardStore
               spellCheck={false}
             />
           </div>
-          <div className="flex-1 flex flex-col">
-            <div className="p-2 bg-muted text-xs text-muted-foreground uppercase tracking-wider">Preview</div>
-            <div 
-              className="flex-1 p-4 overflow-auto"
-              dangerouslySetInnerHTML={{ __html: html }}
+          <div className="flex min-h-0 flex-col">
+            <div className="p-2 bg-muted text-xs text-muted-foreground uppercase tracking-wider">Sandbox Preview</div>
+            <iframe
+              title="Custom page preview"
+              sandbox="allow-scripts"
+              srcDoc={html}
+              className="flex-1 w-full bg-white"
             />
           </div>
         </div>
@@ -2205,10 +2699,10 @@ function CustomPagesView({ store }: { store: ReturnType<typeof useDashboardStore
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Custom Pages</h1>
-          <p className="text-muted-foreground">Create and manage your own HTML pages</p>
+          <p className="text-muted-foreground">Describe a page, generate self-contained HTML, and save it into the dashboard.</p>
         </div>
         <button
           onClick={startNewPage}
@@ -2220,8 +2714,8 @@ function CustomPagesView({ store }: { store: ReturnType<typeof useDashboardStore
 
       <div className="grid md:grid-cols-2 gap-4">
         {store.customPages.map(page => (
-          <div 
-            key={page.id} 
+          <div
+            key={page.id}
             className="p-4 bg-card border border-border rounded-lg"
           >
             <div className="flex items-start justify-between">
@@ -2235,13 +2729,13 @@ function CustomPagesView({ store }: { store: ReturnType<typeof useDashboardStore
                 </div>
               </div>
               <div className="flex gap-1">
-                <button 
+                <button
                   onClick={() => startEdit(page)}
                   className="p-2 hover:bg-muted rounded"
                 >
                   <Edit3 className="w-4 h-4" />
                 </button>
-                <button 
+                <button
                   onClick={() => store.deleteCustomPage(page.id)}
                   className="p-2 hover:bg-muted rounded text-red-500"
                 >
@@ -2402,10 +2896,6 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleNavigate = (view: ViewType, _id?: string) => {
-    store.navigateTo(view);
-  };
-
   // Render current view
   const renderView = () => {
     switch (store.currentView) {
@@ -2426,7 +2916,7 @@ function App() {
       case 'files':
         return <FilesView store={store} />;
       case 'ai':
-        return <AIAgentView />;
+        return <AIAgentView store={store} />;
       case 'axioms':
         return <AxiomsView />;
       case 'custom':
