@@ -60,6 +60,39 @@ def init_db():
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS prompts (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL DEFAULT '',
+        short TEXT NOT NULL DEFAULT '',
+        template TEXT NOT NULL DEFAULT '',
+        category TEXT NOT NULL DEFAULT 'custom',
+        category_label TEXT NOT NULL DEFAULT 'Custom',
+        color TEXT NOT NULL DEFAULT '#f59e0b',
+        tags TEXT DEFAULT '[]',
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS projects (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL DEFAULT '',
+        color TEXT NOT NULL DEFAULT '#5A5F6E',
+        created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS tasks (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL DEFAULT '',
+        due TEXT NOT NULL DEFAULT '',
+        time TEXT NOT NULL DEFAULT '',
+        done INTEGER NOT NULL DEFAULT 0,
+        priority TEXT NOT NULL DEFAULT '',
+        project TEXT NOT NULL DEFAULT '',
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+    );
     """)
     db.commit()
     return db
@@ -81,7 +114,7 @@ def row_to_dict(row):
                 d[k] = json.loads(d[k])
             except Exception:
                 d[k] = []
-    for k in ('pinned', 'starred', 'deleted'):
+    for k in ('pinned', 'starred', 'deleted', 'done'):
         if k in d:
             d[k] = bool(d[k])
     return d
@@ -205,6 +238,44 @@ class Handler(BaseHTTPRequestHandler):
                 rows = DB.execute("SELECT * FROM bookmarks ORDER BY created_at DESC").fetchall()
             self._json(200, [row_to_dict(r) for r in rows])
 
+        # GET /api/prompts
+        elif p == "/api/prompts":
+            with LOCK:
+                rows = DB.execute("SELECT * FROM prompts ORDER BY name").fetchall()
+            self._json(200, [row_to_dict(r) for r in rows])
+
+        # GET /api/prompts/:id
+        elif p.startswith("/api/prompts/"):
+            pid = p.split("/")[-1]
+            with LOCK:
+                row = DB.execute("SELECT * FROM prompts WHERE id=?", (pid,)).fetchone()
+            if row:
+                self._json(200, row_to_dict(row))
+            else:
+                self._json(404, {"error": "not found"})
+
+        # GET /api/tasks
+        elif p == "/api/tasks":
+            with LOCK:
+                rows = DB.execute("SELECT * FROM tasks ORDER BY due, time").fetchall()
+            self._json(200, [row_to_dict(r) for r in rows])
+
+        # GET /api/tasks/:id
+        elif p.startswith("/api/tasks/"):
+            tid = p.split("/")[-1]
+            with LOCK:
+                row = DB.execute("SELECT * FROM tasks WHERE id=?", (tid,)).fetchone()
+            if row:
+                self._json(200, row_to_dict(row))
+            else:
+                self._json(404, {"error": "not found"})
+
+        # GET /api/projects
+        elif p == "/api/projects":
+            with LOCK:
+                rows = DB.execute("SELECT * FROM projects ORDER BY name").fetchall()
+            self._json(200, [row_to_dict(r) for r in rows])
+
         else:
             self._json(404, {"error": "not found"})
 
@@ -261,6 +332,51 @@ class Handler(BaseHTTPRequestHandler):
                 DB.commit()
             self._json(201, {"id": bid})
 
+        # POST /api/prompts
+        elif p == "/api/prompts":
+            pid = body.get("id") or f"p_{int(time.time()*1000)}_{uuid.uuid4().hex[:6]}"
+            now = datetime.utcnow().isoformat() + "Z"
+            with LOCK:
+                DB.execute(
+                    """INSERT OR REPLACE INTO prompts
+                    (id,name,short,template,category,category_label,color,tags,created_at,updated_at)
+                    VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                    (pid, body.get("name", ""), body.get("short", ""),
+                     body.get("template", ""), body.get("category", "custom"),
+                     body.get("category_label", "Custom"), body.get("color", "#f59e0b"),
+                     json.dumps(body.get("tags", [])), now, now))
+                DB.commit()
+            self._json(201, {"id": pid})
+
+        # POST /api/tasks
+        elif p == "/api/tasks":
+            tid = body.get("id") or f"t_{int(time.time()*1000)}_{uuid.uuid4().hex[:6]}"
+            now = datetime.utcnow().isoformat() + "Z"
+            with LOCK:
+                DB.execute(
+                    """INSERT OR REPLACE INTO tasks
+                    (id,title,due,time,done,priority,project,notes,created_at,updated_at)
+                    VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                    (tid, body.get("title", ""), body.get("due", ""),
+                     body.get("time", ""), int(body.get("done", False)),
+                     body.get("priority", ""), body.get("project", ""),
+                     body.get("notes", ""), now, now))
+                DB.commit()
+            self._json(201, {"id": tid})
+
+        # POST /api/projects
+        elif p == "/api/projects":
+            prid = body.get("id") or f"proj_{int(time.time()*1000)}_{uuid.uuid4().hex[:6]}"
+            now = datetime.utcnow().isoformat() + "Z"
+            with LOCK:
+                DB.execute(
+                    """INSERT OR REPLACE INTO projects
+                    (id,name,color,created_at)
+                    VALUES (?,?,?,?)""",
+                    (prid, body.get("name", ""), body.get("color", "#5A5F6E"), now))
+                DB.commit()
+            self._json(201, {"id": prid})
+
         else:
             self._json(404, {"error": "not found"})
 
@@ -311,6 +427,41 @@ class Handler(BaseHTTPRequestHandler):
                 DB.commit()
             self._json(200, {"id": nid})
 
+        # PUT /api/prompts/:id
+        elif p.startswith("/api/prompts/"):
+            pid = p.split("/")[-1]
+            now = datetime.utcnow().isoformat() + "Z"
+            sets, vals = [], []
+            for k in ("name", "short", "template", "category", "category_label", "color"):
+                if k in body:
+                    sets.append(f"{k}=?"); vals.append(body[k])
+            if "tags" in body:
+                sets.append("tags=?")
+                vals.append(json.dumps(body["tags"]) if isinstance(body["tags"], list) else body["tags"])
+            sets.append("updated_at=?"); vals.append(now)
+            vals.append(pid)
+            with LOCK:
+                DB.execute(f"UPDATE prompts SET {','.join(sets)} WHERE id=?", vals)
+                DB.commit()
+            self._json(200, {"id": pid})
+
+        # PUT /api/tasks/:id
+        elif p.startswith("/api/tasks/"):
+            tid = p.split("/")[-1]
+            now = datetime.utcnow().isoformat() + "Z"
+            sets, vals = [], []
+            for k in ("title", "due", "time", "priority", "project", "notes"):
+                if k in body:
+                    sets.append(f"{k}=?"); vals.append(body[k])
+            if "done" in body:
+                sets.append("done=?"); vals.append(int(body["done"]))
+            sets.append("updated_at=?"); vals.append(now)
+            vals.append(tid)
+            with LOCK:
+                DB.execute(f"UPDATE tasks SET {','.join(sets)} WHERE id=?", vals)
+                DB.commit()
+            self._json(200, {"id": tid})
+
         else:
             self._json(404, {"error": "not found"})
 
@@ -336,6 +487,27 @@ class Handler(BaseHTTPRequestHandler):
             bid = p.split("/")[-1]
             with LOCK:
                 DB.execute("DELETE FROM bookmarks WHERE id=?", (bid,))
+                DB.commit()
+            self._no_content()
+
+        elif p.startswith("/api/prompts/"):
+            pid = p.split("/")[-1]
+            with LOCK:
+                DB.execute("DELETE FROM prompts WHERE id=?", (pid,))
+                DB.commit()
+            self._no_content()
+
+        elif p.startswith("/api/tasks/"):
+            tid = p.split("/")[-1]
+            with LOCK:
+                DB.execute("DELETE FROM tasks WHERE id=?", (tid,))
+                DB.commit()
+            self._no_content()
+
+        elif p.startswith("/api/projects/"):
+            prid = p.split("/")[-1]
+            with LOCK:
+                DB.execute("DELETE FROM projects WHERE id=?", (prid,))
                 DB.commit()
             self._no_content()
 
