@@ -264,13 +264,14 @@ export function useDashboardStore() {
   useEffect(() => { if (isLoaded) saveToStorage(STORAGE_KEYS.view, currentView); }, [currentView, isLoaded]);
 
   // ─── CLIP ACTIONS ───
-  const addClip = useCallback((content: string, title?: string, clipTags: string[] = []) => {
+  const addClip = useCallback((content: string, title?: string, clipTags: string[] = [], slot?: number) => {
     const newClip: ClipboardItem = {
       id: `clip_${Date.now()}`,
       content,
       title,
       tags: clipTags,
       pinned: false,
+      slot,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
