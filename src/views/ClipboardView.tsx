@@ -121,7 +121,7 @@ export function ClipboardView() {
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden select-none" style={css.body}>
+    <div className="h-full flex flex-col overflow-hidden select-none" style={{ ...css.body, maxWidth: '360px', margin: '0', width: '100%', borderRight: '1px solid #1e1e2e' }}>
       {/* SEARCH BAR */}
       <div style={css.searchBar}>
         <div style={{ position: 'relative', flex: 1 }}>
