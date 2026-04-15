@@ -2,8 +2,8 @@ import { useParams } from 'react-router-dom';
 import { useDashboardStore } from '@/hooks/useDashboardStore';
 import { TTSView } from '@/views/TTSView';
 import { ClipboardView } from '@/views/ClipboardView';
+import { PromptsView } from '@/views/PromptsView';
 import {
-  PromptsView,
   ResearchView,
   CalendarView,
   NotesView,
@@ -36,7 +36,7 @@ function PanelContent({ viewId, store }: { viewId: ViewType; store: ReturnType<t
   switch (viewId) {
     case 'tts': return <TTSView />;
     case 'clipboard': return <ClipboardView />;
-    case 'prompts': return <PromptsView store={store} />;
+    case 'prompts': return <PromptsView />;
     case 'research': return <ResearchView store={store} />;
     case 'calendar': return <CalendarView store={store} />;
     case 'notes': return <NotesView store={store} />;

@@ -41,6 +41,7 @@ import type { ViewType, SearchResult, Task, Prompt, Bookmark, CustomPage, ChatTu
 import { Shell } from '@/components/Shell';
 import { ClipboardView as ClipboardViewExtracted } from '@/views/ClipboardView';
 import { TTSView as TTSViewExtracted } from '@/views/TTSView';
+import { PromptsView as PromptsViewExtracted } from '@/views/PromptsView';
 
 // ─── VIEW CONFIGURATION ───
 const VIEWS: { id: ViewType; label: string; icon: React.ElementType; color: string }[] = [
@@ -3098,7 +3099,7 @@ function App() {
     <Shell views={SHELL_VIEWS} activeView={activeView} onViewChange={setActiveView}>
       {activeView === 'clipboard' && <ClipboardViewExtracted />}
       {activeView === 'tts' && <TTSViewExtracted />}
-      {activeView === 'prompts' && <PromptsView store={store} />}
+      {activeView === 'prompts' && <PromptsViewExtracted />}
       {activeView === 'research' && <ResearchView store={store} />}
       {activeView === 'calendar' && <CalendarView store={store} />}
       {activeView === 'notes' && <NotesView store={store} />}
