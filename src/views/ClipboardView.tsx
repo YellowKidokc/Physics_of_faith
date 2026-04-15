@@ -84,48 +84,48 @@ export function ClipboardView() {
 
   const css = {
     body: { fontFamily: "'IBM Plex Mono', monospace", background: '#0a0a0f', color: '#c8ccd4' },
-    searchBar: { display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 10px', borderBottom: '1px solid #1e1e2e', background: '#0d0d14', flexShrink: 0 },
-    searchInput: { flex: 1, background: '#12121c', border: '1px solid #1e1e2e', borderRadius: '5px', padding: '8px 10px 8px 30px', color: '#c8ccd4', fontSize: '13px', fontFamily: 'inherit', outline: 'none' } as React.CSSProperties,
-    brandBadge: { fontSize: '12px', fontWeight: 700, letterSpacing: '2px', color: '#f59e0b', whiteSpace: 'nowrap' as const, display: 'flex', alignItems: 'center', gap: '6px' },
-    dot: { width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px rgba(16,185,129,0.5)' },
+    searchBar: { display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', borderBottom: '1px solid #1e1e2e', background: '#0d0d14', flexShrink: 0 },
+    searchInput: { flex: 1, background: '#12121c', border: '1px solid #1e1e2e', borderRadius: '4px', padding: '5px 8px 5px 28px', color: '#c8ccd4', fontSize: '11px', fontFamily: 'inherit', outline: 'none' } as React.CSSProperties,
+    brandBadge: { fontSize: '11px', fontWeight: 700, letterSpacing: '2px', color: '#f59e0b', whiteSpace: 'nowrap' as const, display: 'flex', alignItems: 'center', gap: '5px' },
+    dot: { width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 4px rgba(16,185,129,0.5)' },
     tabBar: { display: 'flex', background: '#0a0a0f', borderBottom: '1px solid #1e1e2e', flexShrink: 0 },
-    tab: (active: boolean) => ({ flex: 1, padding: '8px 0', textAlign: 'center' as const, fontSize: '10px', letterSpacing: '1.5px', fontWeight: 600, color: active ? '#f59e0b' : '#3a3a4a', cursor: 'pointer', borderBottom: `2px solid ${active ? '#f59e0b' : 'transparent'}`, transition: 'all .1s', background: 'transparent', fontFamily: 'inherit' }),
-    slotCard: (filled: boolean) => ({ background: '#111118', border: `1px solid ${filled ? '#1e3a5f' : '#1e1e2e'}`, borderRadius: '8px', padding: '9px 10px', display: 'flex', flexDirection: 'column' as const, gap: '6px', minHeight: '82px', transition: 'border-color .1s' }),
-    slotLabel: { fontSize: '11px', fontWeight: 700, color: '#f59e0b', letterSpacing: '1px' },
-    slotStatus: { fontSize: '9px', fontWeight: 600, letterSpacing: '1px', color: '#10b981' },
-    slotTitle: { fontSize: '12px', fontWeight: 600, color: '#e0e0e0', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' },
-    slotPreview: { fontSize: '11px', color: '#6b7280', lineHeight: '1.35', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' },
-    slotBtn: { padding: '4px 0', flex: 1, border: '1px solid #1e1e2e', borderRadius: '4px', background: 'transparent', color: '#555', fontSize: '10px', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', transition: 'all .1s', letterSpacing: '.5px' },
+    tab: (active: boolean) => ({ flex: 1, padding: '5px 0', textAlign: 'center' as const, fontSize: '9px', letterSpacing: '1.5px', fontWeight: 600, color: active ? '#f59e0b' : '#3a3a4a', cursor: 'pointer', borderBottom: `2px solid ${active ? '#f59e0b' : 'transparent'}`, transition: 'all .1s', background: 'transparent', fontFamily: 'inherit' }),
+    slotCard: (filled: boolean) => ({ background: '#111118', border: `1px solid ${filled ? '#1e3a5f' : '#1e1e2e'}`, borderRadius: '6px', padding: '6px 8px', display: 'flex', flexDirection: 'column' as const, gap: '3px', minHeight: '56px', transition: 'border-color .1s' }),
+    slotLabel: { fontSize: '9px', fontWeight: 700, color: '#f59e0b', letterSpacing: '1px' },
+    slotStatus: { fontSize: '8px', fontWeight: 600, letterSpacing: '1px', color: '#10b981' },
+    slotTitle: { fontSize: '11px', fontWeight: 600, color: '#e0e0e0', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' },
+    slotPreview: { fontSize: '10px', color: '#6b7280', lineHeight: '1.3', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' },
+    slotBtn: { padding: '2px 0', flex: 1, border: '1px solid #1e1e2e', borderRadius: '3px', background: 'transparent', color: '#555', fontSize: '9px', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', transition: 'all .1s', letterSpacing: '.5px' },
     copyBtn: { background: 'rgba(96,208,255,.1)', borderColor: 'rgba(96,208,255,.3)', color: '#60d0ff' },
     saveBtn: { color: '#888' },
-    clipItem: (pinned: boolean) => ({ padding: '10px 10px 9px', marginBottom: '6px', background: '#111118', border: `1px solid ${pinned ? 'rgba(251,191,36,.32)' : '#1e1e2e'}`, borderRadius: '8px', cursor: 'pointer', transition: 'all .08s', position: 'relative' as const, boxShadow: pinned ? 'inset 0 0 0 1px rgba(251,191,36,.12)' : 'none' }),
-    clipTitle: { fontSize: '12px', fontWeight: 600, color: '#eceef6', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '62px' },
-    clipDesc: { fontSize: '10px', lineHeight: '1.4', color: '#8f96ab', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '4px' },
-    clipMeta: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginTop: '7px' },
-    clipTag: (pinned: boolean) => ({ padding: '2px 6px', border: `1px solid ${pinned ? 'rgba(251,191,36,.28)' : '#2a3145'}`, borderRadius: '999px', background: pinned ? 'rgba(251,191,36,.1)' : '#171b27', color: pinned ? '#fbbf24' : '#aeb7cb', fontSize: '8px', fontWeight: 600, letterSpacing: '.3px', maxWidth: '110px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }),
-    clipTime: { fontSize: '9px', color: '#4f586f', whiteSpace: 'nowrap' as const },
-    clipActions: { position: 'absolute' as const, top: '8px', right: '8px', display: 'flex', gap: '4px' },
-    clipActionBtn: { background: '#12121c', border: '1px solid #1e1e2e', borderRadius: '999px', color: '#70788f', padding: '3px 7px', fontSize: '9px', fontFamily: 'inherit', cursor: 'pointer', transition: 'all .1s' },
-    emptyState: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' as const, color: '#2a2a3a', gap: '6px', padding: '20px' },
+    clipItem: (pinned: boolean) => ({ padding: '6px 8px', marginBottom: '3px', background: '#111118', border: `1px solid ${pinned ? 'rgba(251,191,36,.32)' : '#1e1e2e'}`, borderRadius: '5px', cursor: 'pointer', transition: 'all .08s', position: 'relative' as const, boxShadow: pinned ? 'inset 0 0 0 1px rgba(251,191,36,.12)' : 'none' }),
+    clipTitle: { fontSize: '11px', fontWeight: 600, color: '#eceef6', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '54px' },
+    clipDesc: { fontSize: '9px', lineHeight: '1.3', color: '#8f96ab', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' },
+    clipMeta: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px', marginTop: '4px' },
+    clipTag: (pinned: boolean) => ({ padding: '1px 5px', border: `1px solid ${pinned ? 'rgba(251,191,36,.28)' : '#2a3145'}`, borderRadius: '999px', background: pinned ? 'rgba(251,191,36,.1)' : '#171b27', color: pinned ? '#fbbf24' : '#aeb7cb', fontSize: '8px', fontWeight: 600, letterSpacing: '.3px', maxWidth: '100px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }),
+    clipTime: { fontSize: '8px', color: '#4f586f', whiteSpace: 'nowrap' as const },
+    clipActions: { position: 'absolute' as const, top: '5px', right: '6px', display: 'flex', gap: '3px' },
+    clipActionBtn: { background: '#12121c', border: '1px solid #1e1e2e', borderRadius: '999px', color: '#70788f', padding: '2px 6px', fontSize: '8px', fontFamily: 'inherit', cursor: 'pointer', transition: 'all .1s' },
+    emptyState: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' as const, color: '#2a2a3a', gap: '4px', padding: '16px' },
     dock: { borderTop: '1px solid #1e1e2e', background: '#0d0d14', flexShrink: 0 },
-    dockIcons: { display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 10px', borderBottom: '1px solid #151520' },
-    dockIcon: (active: boolean) => ({ width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: active ? 'rgba(245,158,11,.08)' : '#111118', border: `1px solid ${active ? 'rgba(245,158,11,.4)' : '#1e1e2e'}`, borderRadius: '5px', color: active ? '#f59e0b' : '#555', fontSize: '16px', cursor: 'pointer', transition: 'all .1s' }),
-    dockNew: { padding: '5px 14px', background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.25)', borderRadius: '5px', color: '#f59e0b', fontSize: '11px', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', letterSpacing: '1px', transition: 'all .1s' },
-    dockCats: { display: 'flex', gap: '4px', padding: '6px 10px', borderBottom: '1px solid #151520' },
-    dockCat: (active: boolean) => ({ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', padding: '7px 4px', background: active ? 'rgba(245,158,11,.05)' : '#0a0a0f', border: `1px solid ${active ? 'rgba(245,158,11,.3)' : '#1e1e2e'}`, borderRadius: '4px', color: active ? '#f59e0b' : '#3a3a4a', fontSize: '11px', fontWeight: 700, letterSpacing: '1px', cursor: 'pointer', transition: 'all .1s', fontFamily: 'inherit' }),
-    dockStatus: { display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', fontSize: '11px', color: '#2a2a3a' },
-    dockStatusBtn: { background: 'transparent', border: '1px solid #1e1e2e', borderRadius: '3px', color: '#555', padding: '3px 10px', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .1s' },
-    statusBadge: { padding: '3px 12px', background: 'rgba(16,185,129,.1)', border: '1px solid rgba(16,185,129,.25)', borderRadius: '4px', color: '#10b981', fontSize: '10px', fontWeight: 700, letterSpacing: '1px' },
-    statusCount: { marginLeft: 'auto', fontSize: '12px', color: '#555' },
-    toastStyle: { position: 'fixed' as const, top: '50%', left: '50%', transform: 'translate(-50%,-50%)', background: '#10b981', color: '#000', padding: '10px 24px', borderRadius: '6px', fontSize: '14px', fontWeight: 700, letterSpacing: '2px', zIndex: 9999, pointerEvents: 'none' as const },
+    dockIcons: { display: 'flex', alignItems: 'center', gap: '3px', padding: '4px 8px', borderBottom: '1px solid #151520' },
+    dockIcon: (active: boolean) => ({ width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: active ? 'rgba(245,158,11,.08)' : '#111118', border: `1px solid ${active ? 'rgba(245,158,11,.4)' : '#1e1e2e'}`, borderRadius: '4px', color: active ? '#f59e0b' : '#555', fontSize: '13px', cursor: 'pointer', transition: 'all .1s' }),
+    dockNew: { padding: '3px 10px', background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.25)', borderRadius: '4px', color: '#f59e0b', fontSize: '9px', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', letterSpacing: '1px', transition: 'all .1s' },
+    dockCats: { display: 'flex', gap: '3px', padding: '4px 8px', borderBottom: '1px solid #151520' },
+    dockCat: (active: boolean) => ({ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '4px 3px', background: active ? 'rgba(245,158,11,.05)' : '#0a0a0f', border: `1px solid ${active ? 'rgba(245,158,11,.3)' : '#1e1e2e'}`, borderRadius: '3px', color: active ? '#f59e0b' : '#3a3a4a', fontSize: '9px', fontWeight: 700, letterSpacing: '1px', cursor: 'pointer', transition: 'all .1s', fontFamily: 'inherit' }),
+    dockStatus: { display: 'flex', alignItems: 'center', gap: '5px', padding: '3px 8px', fontSize: '9px', color: '#2a2a3a' },
+    dockStatusBtn: { background: 'transparent', border: '1px solid #1e1e2e', borderRadius: '3px', color: '#555', padding: '2px 8px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit', transition: 'all .1s' },
+    statusBadge: { padding: '2px 8px', background: 'rgba(16,185,129,.1)', border: '1px solid rgba(16,185,129,.25)', borderRadius: '3px', color: '#10b981', fontSize: '9px', fontWeight: 700, letterSpacing: '1px' },
+    statusCount: { marginLeft: 'auto', fontSize: '10px', color: '#555' },
+    toastStyle: { position: 'fixed' as const, top: '50%', left: '50%', transform: 'translate(-50%,-50%)', background: '#10b981', color: '#000', padding: '6px 16px', borderRadius: '5px', fontSize: '11px', fontWeight: 700, letterSpacing: '2px', zIndex: 9999, pointerEvents: 'none' as const },
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden select-none" style={css.body}>
+    <div className="h-full flex flex-col overflow-hidden select-none" style={{ ...css.body, maxWidth: '360px', margin: '0', width: '100%', borderRight: '1px solid #1e1e2e' }}>
       {/* SEARCH BAR */}
       <div style={css.searchBar}>
         <div style={{ position: 'relative', flex: 1 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
             style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#3a3a4a', pointerEvents: 'none' }}>
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
@@ -157,7 +157,7 @@ export function ClipboardView() {
 
         {/* TAB 1: HOTKEYS */}
         {tab === 'hotkeys' && (
-          <div style={{ flex: 1, overflowY: 'auto', padding: '6px', display: 'grid', gridTemplateColumns: '1fr', gap: '6px', alignContent: 'start' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '4px', display: 'grid', gridTemplateColumns: '1fr', gap: '3px', alignContent: 'start' }}>
             {Array.from({ length: SLOTS_PER_PAGE }, (_, pageIdx) => {
               const i = currentPage * SLOTS_PER_PAGE + pageIdx;
               if (i >= MAX_SLOTS) return null;
@@ -197,11 +197,11 @@ export function ClipboardView() {
 
         {/* TAB 2: HISTORY */}
         {tab === 'history' && (
-          <div style={{ flex: 1, overflowY: 'auto', padding: '6px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '4px' }}>
             {regularClips.length === 0 ? (
               <div style={css.emptyState}>
-                <div style={{ fontSize: '14px', letterSpacing: '2px' }}>NO HISTORY</div>
-                <div style={{ fontSize: '12px', color: '#1e1e2e' }}>clips appear as you copy</div>
+                <div style={{ fontSize: '11px', letterSpacing: '2px' }}>NO HISTORY</div>
+                <div style={{ fontSize: '10px', color: '#1e1e2e' }}>clips appear as you copy</div>
               </div>
             ) : (
               regularClips.map(clip => (
@@ -235,21 +235,21 @@ export function ClipboardView() {
 
         {/* TAB 3: AI */}
         {tab === 'ai' && (
-          <div style={{ flex: 1, overflowY: 'auto', padding: '6px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '4px' }}>
             <div style={css.emptyState}>
-              <div style={{ fontSize: '14px', letterSpacing: '2px' }}>AI QUICK ACCESS</div>
-              <div style={{ fontSize: '12px', color: '#1e1e2e' }}>use Ctrl+Alt+A for full AI chat</div>
+              <div style={{ fontSize: '11px', letterSpacing: '2px' }}>AI QUICK ACCESS</div>
+              <div style={{ fontSize: '10px', color: '#1e1e2e' }}>use Ctrl+Alt+A for full AI chat</div>
             </div>
           </div>
         )}
 
         {/* TAB 4: SAVED (+) */}
         {tab === 'saved' && (
-          <div style={{ flex: 1, overflowY: 'auto', padding: '6px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '4px' }}>
             {pinnedClips.length === 0 ? (
               <div style={css.emptyState}>
-                <div style={{ fontSize: '14px', letterSpacing: '2px' }}>NO SAVED CLIPS</div>
-                <div style={{ fontSize: '12px', color: '#1e1e2e' }}>hit SAVE from History to keep items permanently</div>
+                <div style={{ fontSize: '11px', letterSpacing: '2px' }}>NO SAVED CLIPS</div>
+                <div style={{ fontSize: '10px', color: '#1e1e2e' }}>hit SAVE from History to keep items permanently</div>
               </div>
             ) : (
               pinnedClips.map(clip => (
