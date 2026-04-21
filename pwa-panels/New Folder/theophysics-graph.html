@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Theophysics Network Graph · POF 2828</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+:root{
+  --bg:#0B0C0F;--surface:#11131A;--surface2:#181B26;
+  --border:rgba(244,246,255,0.08);--border2:rgba(244,246,255,0.14);
+  --gold:#F2C94C;--gold-glow:rgba(242,201,76,0.5);
+  --text:#F4F6FF;--muted:#8A8F9E;--muted2:#5A5F6E;
+  --blue:#4F8EF7;--green:#4ECB71;--red:#E05C6E;--purple:#9B7FE8;--orange:#F6821F;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+
+#topbar{height:52px;flex-shrink:0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--surface);z-index:100;position:relative;}
+.tb-brand{display:flex;align-items:center;gap:10px;}
+.tb-logo{font-family:monospace;font-size:9px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;opacity:.7;}
+.tb-title{font-size:15px;font-weight:700;}
+.tb-title span{color:var(--gold);}
+.tb-btn{padding:5px 13px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);transition:all .15s;}
+.tb-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+#graph-container{width:100%;height:calc(100vh - 52px);position:relative;background:radial-gradient(circle at center, #11131A 0%, #0B0C0F 100%);}
+svg{width:100%;height:100%;}
+
+/* Legend */
+#legend{position:absolute;top:20px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:15px;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,0.5);}
+.leg-title{font-size:11px;font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);}
+.leg-item{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;color:var(--text);}
+.leg-dot{width:10px;height:10px;border-radius:50%;box-shadow:0 0 10px currentColor;}
+
+/* Overlay Info */
+#node-info{position:absolute;bottom:20px;left:20px;width:300px;background:var(--surface);border:1px solid var(--gold);border-radius:11px;padding:15px;box-shadow:0 10px 30px rgba(0,0,0,0.5);opacity:0;transition:opacity 0.2s ease;pointer-events:none;}
+#ni-type{font-family:monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;}
+#ni-title{font-size:16px;font-weight:700;margin-bottom:6px;}
+#ni-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+
+.node text{font-family:monospace;font-weight:600;}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="tb-brand">
+    <span class="tb-logo">POF 2828</span>
+    <span class="tb-title">Theophysics <span>Graph Engine</span></span>
+  </div>
+  <div>
+    <button class="tb-btn" onclick="window.location.href='theophysics-hub.html'">← Back to Hub</button>
+  </div>
+</div>
+
+<div id="graph-container">
+  <div id="legend">
+    <div class="leg-title">Node Ontology</div>
+    <div class="leg-item"><div class="leg-dot" style="color:var(--gold);background:var(--gold);"></div> Axiom (A)</div>
+    <div class="leg-item"><div class="leg-dot" style="color:var(--blue);background:var(--blue);"></div> Definition (D)</div>
+    <div class="leg-item"><div class="leg-dot" style="color:var(--green);background:var(--green);"></div> Logical Node (LN)</div>
+    <div class="leg-item"><div class="leg-dot" style="color:var(--purple);background:var(--purple);"></div> Boundary Condition (BC)</div>
+    <div class="leg-item"><div class="leg-dot" style="color:var(--red);background:var(--red);"></div> Identification (ID)</div>
+  </div>
+
+  <div id="node-info">
+    <div id="ni-type" style="color:var(--gold)">AXIOM</div>
+    <div id="ni-title">A1.1</div>
+    <div id="ni-desc">Foundational property or logical truth.</div>
+  </div>
+</div>
+
+<script>
+// The DAG network data representing the structural thesis you discussed
+const graphData = {
+  nodes: [
+    // Foundation Layer
+    { id: 'A1.1', group: 'Axiom', title: 'A1.1', desc: 'Base Physical Axiom - Ground truth state.' },
+    { id: 'A1.2', group: 'Axiom', title: 'A1.2', desc: 'Entropy Arrow - Directionality of time.' },
+    { id: 'A1.3', group: 'Axiom', title: 'A1.3', desc: 'Quantum Superposition limits.' },
+    { id: 'A2.1', group: 'Axiom', title: 'A2.1', desc: 'Information Conservation.' },
+    { id: 'A3.1', group: 'Axiom', title: 'A3.1', desc: 'Non-locality bounds.' },
+    
+    { id: 'D1.1', group: 'Definition', title: 'D1.1', desc: 'Definition of χ (Chi field).' },
+    { id: 'D1.2', group: 'Definition', title: 'D1.2', desc: 'Boundary space definition.' },
+    { id: 'D2.1', group: 'Definition', title: 'D2.1', desc: 'Observer coherence metrics.' },
+
+    // Derivation Layer
+    { id: 'LN1.1', group: 'Logical', title: 'LN1.1', desc: 'Information bound logic.' },
+    { id: 'LN1.2', group: 'Logical', title: 'LN1.2', desc: 'Coherence decay constraint.' },
+    { id: 'LN2.1', group: 'Logical', title: 'LN2.1', desc: 'Structural emergence theorem.' },
+    { id: 'LN3.1', group: 'Logical', title: 'LN3.1', desc: 'Local causality theorem.' },
+    { id: 'LN4.1', group: 'Logical', title: 'LN4.1', desc: 'Terminal state collapse logic.' },
+
+    // Constraint Layer (Fence)
+    { id: 'BC1', group: 'Boundary', title: 'BC1', desc: 'Observational horizon limit.' },
+    { id: 'BC2', group: 'Boundary', title: 'BC2', desc: 'Thermodynamic ceiling.' },
+    { id: 'BC3', group: 'Boundary', title: 'BC3', desc: 'Information density max.' },
+    { id: 'BC4', group: 'Boundary', title: 'BC4', desc: 'Moral symmetry constraint.' },
+    { id: 'BC5', group: 'Boundary', title: 'BC5', desc: 'Grace exclusion domain.' },
+    { id: 'BC6', group: 'Boundary', title: 'BC6', desc: 'Anthropomorphic constants.' },
+    { id: 'BC7', group: 'Boundary', title: 'BC7', desc: 'Local observer interference limit.' },
+    { id: 'BC8', group: 'Boundary', title: 'BC8', desc: 'Global wavefunction boundary.' },
+
+    // Top Layer / Apex
+    { id: 'PERSONHOOD', group: 'Identity', title: 'PERSONHOOD', desc: 'Irreducible properties of agency and relationship.' },
+    { id: 'ID7.1', group: 'Identity', title: 'ID7.1 (GOD)', desc: 'Terminal Observer = God framework.' }
+  ],
+  links: [
+    // Converging support instead of linear chain!
+    { source: 'A1.1', target: 'LN1.1' },
+    { source: 'A1.2', target: 'LN1.1' },
+    { source: 'D1.1', target: 'LN1.2' },
+    { source: 'A1.3', target: 'LN1.2' },
+    
+    { source: 'A2.1', target: 'LN2.1' },
+    { source: 'D1.2', target: 'LN2.1' },
+    { source: 'D2.1', target: 'LN3.1' },
+    
+    { source: 'LN1.1', target: 'LN4.1' },
+    { source: 'LN1.2', target: 'LN4.1' },
+    { source: 'LN2.1', target: 'BC1' },
+    { source: 'LN2.1', target: 'BC2' },
+    { source: 'LN3.1', target: 'BC3' },
+    { source: 'LN3.1', target: 'BC4' },
+    
+    { source: 'LN4.1', target: 'BC5' },
+    { source: 'LN4.1', target: 'BC6' },
+    { source: 'BC1', target: 'BC7' },
+    { source: 'BC2', target: 'BC8' },
+    
+    { source: 'BC3', target: 'ID7.1' },
+    { source: 'BC4', target: 'ID7.1' },
+    { source: 'BC5', target: 'ID7.1' },
+    { source: 'BC6', target: 'ID7.1' },
+    { source: 'BC7', target: 'ID7.1' },
+    { source: 'BC8', target: 'ID7.1' },
+    
+    { source: 'PERSONHOOD', target: 'ID7.1' }
+  ]
+};
+
+// Colors mapping
+const colorScale = {
+  'Axiom': '#F2C94C',
+  'Definition': '#4F8EF7',
+  'Logical': '#4ECB71',
+  'Boundary': '#9B7FE8',
+  'Identity': '#E05C6E'
+};
+
+const width = window.innerWidth;
+const height = window.innerHeight - 52;
+
+const svg = d3.select("#graph-container").append("svg")
+  .attr("viewBox", [0, 0, width, height]);
+
+// Define arrow markers for directed edges
+svg.append("defs").selectAll("marker")
+  .data(["end"])
+  .enter().append("marker")
+  .attr("id", "arrow")
+  .attr("viewBox", "0 -5 10 10")
+  .attr("refX", 25) // Offset from node center
+  .attr("refY", 0)
+  .attr("markerWidth", 5)
+  .attr("markerHeight", 5)
+  .attr("orient", "auto")
+  .append("path")
+  .attr("fill", "rgba(244,246,255,0.3)")
+  .attr("d", "M0,-5L10,0L0,5");
+
+// Glow filter
+const defs = svg.select("defs");
+const filter = defs.append("filter").attr("id", "glow");
+filter.append("feGaussianBlur").attr("stdDeviation", "4").attr("result", "coloredBlur");
+const feMerge = filter.append("feMerge");
+feMerge.append("feMergeNode").attr("in", "coloredBlur");
+feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+const g = svg.append("g");
+
+// Zoom behavior
+svg.call(d3.zoom()
+  .extent([[0, 0], [width, height]])
+  .scaleExtent([0.1, 4])
+  .on("zoom", (e) => g.attr("transform", e.transform))
+);
+
+// Simulation
+const simulation = d3.forceSimulation(graphData.nodes)
+  .force("link", d3.forceLink(graphData.links).id(d => d.id).distance(100))
+  .force("charge", d3.forceManyBody().strength(-800))
+  .force("center", d3.forceCenter(width / 2, height / 2))
+  .force("collide", d3.forceCollide().radius(40));
+
+// Draw Links
+const link = g.append("g")
+  .attr("class", "links")
+  .selectAll("line")
+  .data(graphData.links)
+  .enter().append("line")
+  .attr("stroke", "rgba(244,246,255,0.15)")
+  .attr("stroke-width", 2)
+  .attr("marker-end", "url(#arrow)");
+
+// Draw Nodes
+const node = g.append("g")
+  .attr("class", "nodes")
+  .selectAll("g")
+  .data(graphData.nodes)
+  .enter().append("g")
+  .attr("class", "node")
+  .call(d3.drag()
+    .on("start", dragstarted)
+    .on("drag", dragged)
+    .on("end", dragended))
+  .on("mouseover", handleMouseOver)
+  .on("mouseout", handleMouseOut);
+
+// Node circles
+node.append("circle")
+  .attr("r", 16)
+  .attr("fill", d => colorScale[d.group])
+  .style("filter", "url(#glow)");
+
+// Node labels
+node.append("text")
+  .attr("dx", 0)
+  .attr("dy", 30)
+  .attr("fill", d => colorScale[d.group])
+  .style("font-size", "11px")
+  .style("text-anchor", "middle")
+  .text(d => d.title);
+
+simulation.on("tick", () => {
+  link
+    .attr("x1", d => d.source.x)
+    .attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x)
+    .attr("y2", d => d.target.y);
+
+  node.attr("transform", d => `translate(${d.x},${d.y})`);
+});
+
+// Drag functions
+function dragstarted(event, d) {
+  if (!event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+function dragged(event, d) {
+  d.fx = event.x;
+  d.fy = event.y;
+}
+function dragended(event, d) {
+  if (!event.active) simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+}
+
+// Interaction functions
+const infoBox = document.getElementById('node-info');
+const infoType = document.getElementById('ni-type');
+const infoTitle = document.getElementById('ni-title');
+const infoDesc = document.getElementById('ni-desc');
+
+function handleMouseOver(event, d) {
+  // Highlight node & connections
+  node.transition().duration(200).style("opacity", o => {
+    const isConn = isConnected(d, o);
+    return isConn ? 1 : 0.15;
+  });
+  link.transition().duration(200)
+    .style("stroke-opacity", o => (o.source === d || o.target === d ? 1 : 0.05))
+    .style("stroke", o => (o.source === d || o.target === d ? colorScale[d.group] : "rgba(244,246,255,0.15)"));
+  
+  // Show UI pane
+  infoBox.style.opacity = 1;
+  infoType.textContent = d.group.toUpperCase();
+  infoType.style.color = colorScale[d.group];
+  infoTitle.textContent = d.title;
+  infoTitle.style.color = colorScale[d.group];
+  infoDesc.textContent = d.desc;
+}
+
+function handleMouseOut() {
+  node.transition().duration(200).style("opacity", 1);
+  link.transition().duration(200)
+    .style("stroke-opacity", 1)
+    .style("stroke", "rgba(244,246,255,0.15)");
+  
+  infoBox.style.opacity = 0;
+}
+
+// Helper to check connected nodes
+const linkedByIndex = {};
+graphData.links.forEach(d => {
+  linkedByIndex[`${d.source.id},${d.target.id}`] = 1;
+  linkedByIndex[`${d.target.id},${d.source.id}`] = 1;
+});
+function isConnected(a, b) {
+  return linkedByIndex[`${a.id},${b.id}`] || a.id === b.id;
+}
+</script>
+
+</body>
+</html>

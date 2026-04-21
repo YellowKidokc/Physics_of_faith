@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s --max-time 8 https://clipsync-api-production.davidokc28.workers.dev/api/health)",
+      "Bash(curl -s --max-time 8 https://clipsync-api-production.davidokc28.workers.dev/api/prompts)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' --max-time 6 https://clipsync-api-production.davidokc28.workers.dev__TRACKED_VAR__)",
+      "Bash(curl -s --max-time 8 \"https://clipsync-api-production.davidokc28.workers.dev/api/items?type=clip&limit=3\")",
+      "Bash(curl -s --max-time 8 \"https://clipsync-api-production.davidokc28.workers.dev/api/items?limit=1\")",
+      "Bash(curl -s -o /tmp/b.txt -w '%{http_code}' --max-time 8 https://clipsync-api-production.davidokc28.workers.dev/api/items__TRACKED_VAR__)",
+      "Bash(curl -s -i -X OPTIONS --max-time 8 https://clipsync-api-production.davidokc28.workers.dev/api/items)",
+      "Bash(curl -s -i -X DELETE --max-time 8 \"https://clipsync-api-production.davidokc28.workers.dev/api/items/mo491wodckq44dsm8r\")",
+      "Bash(mount)",
+      "Bash(npm run *)"
+    ]
+  }
+}
