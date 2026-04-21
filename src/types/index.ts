@@ -250,7 +250,8 @@ export type ViewType =
   | 'custom'
   | 'tts'
   | 'deepcrawl'
-  | 'search';
+  | 'search'
+  | 'links';
 
 export interface ViewConfig {
   id: ViewType;

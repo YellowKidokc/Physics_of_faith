@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { SyncStatus } from './SyncStatus';
+import { InstallPanel } from './InstallPanel';
 
 export interface ShellView {
   id: string;
@@ -157,6 +158,7 @@ export function Shell({ views, activeView, onViewChange, children }: ShellProps)
             ))}
           </div>
           <div style={css.sidebarFooter}>
+            <InstallPanel compact={!sidebarOpen} />
             <SyncStatus />
           </div>
         </div>
