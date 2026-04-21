@@ -41,22 +41,22 @@ npx wrangler pages deploy dist
 See `PWA_BUILD_SPEC.md` for full consolidation instructions including:
 - Cloudflare D1 sync architecture
 - Multi-device support (3 laptops + 2 phones)
-- DeepCrawl GUI + SearXNG embedding
-- Bill AI prediction integration
-- Clipboard width should be narrower than current
+- DeepCrawl GUI + SearXNG embedding ✅
+- Bill AI prediction integration ✅
+- Separately-installable PWAs (Clipboard, TTS, Prompts, Research, Links) talking to the main Cloudflare app
 
 ## Views
 | View | Status | Notes |
 |------|--------|-------|
-| Clipboard | ✅ Working | Make slightly less wide |
+| Clipboard | ✅ Working | Narrowed to 300px + Bill predictions in AI tab |
 | TTS | ✅ Working | DO NOT TOUCH |
 | Prompts | ✅ Working | |
 | Notes | ✅ Working | |
 | Calendar | ✅ Working | |
-| AI Hub | 🔧 Needs Bill | Wire to /bil/clipboard/predict |
+| AI Hub | ✅ Working | Bill wired at `/bil/clipboard/predict` (Clipboard AI tab) |
 | Research | 🔧 Partial | |
-| DeepCrawl | ❌ Add | Embed deepcrawl-gui.pages.dev |
-| Search | ❌ Add | Embed search.dlowehomelab.com |
+| DeepCrawl | ✅ Working | Embeds `deepcrawl-gui.pages.dev` |
+| Search | ✅ Working | Embeds `search.dlowehomelab.com` |
 
 ## API Endpoints (Local — port 3456)
 - `/api/clips` — CRUD + auto-capture from Windows clipboard
