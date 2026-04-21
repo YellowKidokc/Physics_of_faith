@@ -10,11 +10,8 @@ import { NotesView } from '@/views/NotesView';
 import { LinksView } from '@/views/LinksView';
 import { DeepCrawlView } from '@/views/DeepCrawlView';
 import { SearchView } from '@/views/SearchView';
-import {
-  SettingsView,
-  DashboardView,
-  AIAgentView,
-} from '@/App';
+import { AIHubView } from '@/views/AIHubView';
+import { SettingsView } from '@/views/SettingsView';
 import type { ViewType } from '@/types';
 
 const STANDALONE_MANIFESTS: Partial<Record<ViewType, string>> = {
@@ -71,9 +68,8 @@ function PanelContent({ viewId, store }: { viewId: ViewType; store: ReturnType<t
     case 'links': return <LinksView />;
     case 'deepcrawl': return <DeepCrawlView />;
     case 'search': return <SearchView />;
-    case 'ai': return <AIAgentView store={store} />;
+    case 'ai': return <AIHubView />;
     case 'settings': return <SettingsView store={store} />;
-    case 'dashboard': return <DashboardView store={store} />;
     default:
       return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px', textAlign: 'center' }}>
