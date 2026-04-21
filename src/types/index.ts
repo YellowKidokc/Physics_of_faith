@@ -248,7 +248,9 @@ export type ViewType =
   | 'research'
   | 'calendar'
   | 'custom'
-  | 'tts';
+  | 'tts'
+  | 'deepcrawl'
+  | 'search';
 
 export interface ViewConfig {
   id: ViewType;

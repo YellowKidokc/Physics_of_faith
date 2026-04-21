@@ -46,6 +46,8 @@ import { ResearchView as ResearchViewExtracted } from '@/views/ResearchView';
 import { CalendarView as CalendarViewExtracted } from '@/views/CalendarView';
 import { NotesView as NotesViewExtracted } from '@/views/NotesView';
 import { AIHubView } from '@/views/AIHubView';
+import { DeepCrawlView } from '@/views/DeepCrawlView';
+import { SearchView } from '@/views/SearchView';
 
 // ─── VIEW CONFIGURATION ───
 const VIEWS: { id: ViewType; label: string; icon: React.ElementType; color: string }[] = [
@@ -72,6 +74,8 @@ const SHELL_VIEWS = [
   { id: 'calendar', label: 'CALENDAR', icon: '\u{1F4C5}', color: '#E05C6E' },
   { id: 'notes', label: 'NOTES', icon: '\u{1F4DD}', color: '#F6821F' },
   { id: 'ai', label: 'AI HUB', icon: '\u{1F916}', color: '#22d3ee' },
+  { id: 'deepcrawl', label: 'DEEPCRAWL', icon: '\u{1F577}', color: '#9B7FE8' },
+  { id: 'search', label: 'SEARCH', icon: '\u{1F50D}', color: '#4ECB71' },
   { id: 'settings', label: 'SETTINGS', icon: '\u2699', color: '#8A8F9E' },
 ];
 
@@ -3108,6 +3112,8 @@ function App() {
       {activeView === 'calendar' && <CalendarViewExtracted />}
       {activeView === 'notes' && <NotesViewExtracted />}
       {activeView === 'ai' && <AIHubView />}
+      {activeView === 'deepcrawl' && <DeepCrawlView />}
+      {activeView === 'search' && <SearchView />}
       {activeView === 'settings' && <SettingsView store={store} />}
     </Shell>
   );
