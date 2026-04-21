@@ -371,9 +371,16 @@
 
 <script>
 // ============================================================
-// DATA — Edit these to add/change your prompts
+// DATA — canonical source is pwa-panels/data/prompts.json.
+// The bundled copy below is a last-resort fallback when the
+// JSON file can't be fetched (e.g. opened via file:// on some
+// browsers that block sibling-file fetches). Keep it in sync
+// or, better, edit prompts.json and reload.
 // ============================================================
-const COMMANDS = {
+const PROMPTS_JSON_URL = './data/prompts.json';
+let COMMANDS = {};
+
+const BUNDLED_COMMANDS = {
   core8: {
     label: "CORE 8", color: "#f59e0b",
     items: [
@@ -450,12 +457,46 @@ let chain = [];
 let selectedIndex = -1; // for keyboard nav
 const BRIDGE_HINT = 'C:\\Users\\lowes\\Desktop\\Personal dashboard\\Data\\Prompts';
 
-// Build flat item list
-Object.entries(COMMANDS).forEach(([catKey, cat]) => {
-  cat.items.forEach(item => {
-    allItems.push({ ...item, category: catKey, categoryLabel: cat.label, color: cat.color });
+// Rebuild COMMANDS (category → {label, color, items}) and the flat
+// `allItems` list from any source shape. Accepts either:
+//   - the bundled shape: { catKey: { label, color, items: [...] } }
+//   - the JSON file shape: { categories: [{id,label,color}], prompts: [{id,category,...}] }
+function applyPromptData(data) {
+  if (data && Array.isArray(data.prompts) && Array.isArray(data.categories)) {
+    const grouped = {};
+    data.categories.forEach(c => { grouped[c.id] = { label: c.label, color: c.color, items: [] }; });
+    data.prompts.forEach(p => {
+      const bucket = grouped[p.category] || (grouped[p.category] = { label: p.category.toUpperCase(), color: '#94a3b8', items: [] });
+      bucket.items.push({ id: p.id, name: p.name, short: p.short, template: p.template });
+    });
+    COMMANDS = grouped;
+  } else {
+    COMMANDS = data || BUNDLED_COMMANDS;
+  }
+  allItems = [];
+  Object.entries(COMMANDS).forEach(([catKey, cat]) => {
+    cat.items.forEach(item => {
+      allItems.push({ ...item, category: catKey, categoryLabel: cat.label, color: cat.color });
+    });
   });
-});
+}
+
+async function loadPrompts() {
+  try {
+    const r = await fetch(PROMPTS_JSON_URL, { cache: 'no-cache' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    applyPromptData(data);
+  } catch (e) {
+    // file:// in some browsers, or offline — use bundled copy
+    applyPromptData(BUNDLED_COMMANDS);
+  }
+  render();
+}
+
+// Seed immediately from the bundled copy so the first render has content,
+// then kick off the async fetch to pick up any edits to prompts.json.
+applyPromptData(BUNDLED_COMMANDS);
 
 // ============================================================
 // RENDER
@@ -779,7 +820,9 @@ document.getElementById('searchInput').addEventListener('input', () => {
   render();
 });
 
-render();
+// Kick off the JSON fetch; loadPrompts() will re-render with the
+// canonical data once it resolves (or fall back to the bundled copy).
+loadPrompts();
 </script>
 
 <!-- NEW PROMPT MODAL -->

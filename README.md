@@ -13,6 +13,17 @@ All-in-one PWA dashboard: Clipboard (with AI predictions), TTS Engine, Prompts, 
 - **Cloud Backend:** Cloudflare Worker + D1 (clipsync-api.davidokc28.workers.dev)
 
 ## Quick Start
+
+### One-shot (Windows)
+```bat
+install.bat
+```
+Checks Python/Node/AutoHotkey, runs `npm install` + `npm run build`, seeds
+`ai-hub\config\settings.ini`, installs optional Python deps, and writes
+`start_pof.bat` / `stop_pof.bat` launchers. Prompts you (y/N) to add a
+Startup shortcut so the whole stack comes up at login.
+
+### Manual
 ```bash
 # Install frontend deps
 npm install
@@ -20,7 +31,7 @@ npm install
 # Start local sync server (clipboard monitor + API)
 cd server && python sync_server.py
 
-# Start Bill (behavioral intelligence)
+# Start Bill (behavioral intelligence) — optional
 cd D:\BIL\behavioral-intelligence-layer-OBS-Plugin-Final-Claude
 python -m bil.bil_server
 
