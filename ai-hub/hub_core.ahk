@@ -263,9 +263,9 @@ SetupTray() {
     A_TrayMenu.Add("Show Clipboard", (*) => CB_TrayShow())
     A_TrayMenu.Add("Show BetterTTS", (*) => TTS_TrayShow())
     A_TrayMenu.Add()
-    A_TrayMenu.Add("Clipboard (HTML)", (*) => LaunchHtmlPanel("http://localhost:3456/clipboard3", "POF-Clipboard"))
-    A_TrayMenu.Add("Prompts (HTML)", (*) => LaunchHtmlPanel("http://localhost:3456/prompts", "POF-Prompts"))
-    A_TrayMenu.Add("Links (HTML)", (*) => LaunchHtmlPanel("http://localhost:3456/links", "POF-Links"))
+    A_TrayMenu.Add("Clipboard (HTML)", (*) => LaunchHtmlPanel(PanelUrl("clipboard3.html"), "POF-Clipboard"))
+    A_TrayMenu.Add("Prompts (HTML)", (*) => LaunchHtmlPanel(PanelUrl("prompt_picker.html"), "POF-Prompts"))
+    A_TrayMenu.Add("Links (HTML)", (*) => LaunchHtmlPanel(PanelUrl("research_links.html"), "POF-Links"))
     A_TrayMenu.Add("Hide Clipboard", (*) => CB_TrayHide())
     A_TrayMenu.Add()
     A_TrayMenu.Add("Always On Top", TrayToggleAOT)
@@ -2451,6 +2451,14 @@ ProcessWithPrompt(promptTemplate, replaceText := true, showPopup := false) {
 XButton2:: WinCardinalMover("XButton2", "Ctrl")
 ; ============================================================
 
+; Build a file:// URL that points at pwa-panels/<file> (single source of truth).
+; ai-hub lives at <repo>/ai-hub, panels at <repo>/pwa-panels.
+PanelUrl(fileName) {
+    path := A_ScriptDir "\..\pwa-panels\" fileName
+    path := StrReplace(path, "\", "/")
+    return "file:///" path
+}
+
 LaunchHtmlPanel(url, title) {
     ; Map short keys to actual Chrome window title fragments
     static titleMap := Map(
@@ -2488,20 +2496,20 @@ LaunchHtmlPanel(url, title) {
 
 ; Ctrl+Alt+C = Clipboard (HTML)
 ^!c:: {
-    LaunchHtmlPanel("http://localhost:3456/clipboard3", "POF-Clipboard")
+    LaunchHtmlPanel(PanelUrl("clipboard3.html"), "POF-Clipboard")
 }
 
 ; Ctrl+Alt+P = Prompts (HTML)
 ^!p:: {
-    LaunchHtmlPanel("http://localhost:3456/prompts", "POF-Prompts")
+    LaunchHtmlPanel(PanelUrl("prompt_picker.html"), "POF-Prompts")
 }
 
 ; Ctrl+Alt+K = Links (web research)
 ^!k:: {
-    LaunchHtmlPanel("http://localhost:3456/links", "POF-Links")
+    LaunchHtmlPanel(PanelUrl("research_links.html"), "POF-Links")
 }
 
 ; Ctrl+Alt+M = Calendar / Tasks
 ^!m:: {
-    LaunchHtmlPanel("http://localhost:3456/calendar", "POF-Calendar")
+    LaunchHtmlPanel(PanelUrl("task-calendar.html"), "POF-Calendar")
 }

@@ -35,9 +35,9 @@ try Run(A_ScriptDir "\BetterTTS\BetterTTS.ahk")
 SetTimer(LaunchStartupPanels, -3000)
 
 LaunchStartupPanels() {
-    try LaunchHtmlPanel("http://localhost:3456/prompts", "POF-Prompts")
+    try LaunchHtmlPanel(PanelUrl("prompt_picker.html"), "POF-Prompts")
     Sleep(500)
-    try LaunchHtmlPanel("http://localhost:3456/links", "POF-Links")
+    try LaunchHtmlPanel(PanelUrl("research_links.html"), "POF-Links")
 }
 
 ; Clipboard ingestion now lives in Python (sync_server.py).

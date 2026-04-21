@@ -20,7 +20,7 @@ A desktop productivity system built on AutoHotkey v2 that integrates clipboard m
 
 ```
 AI-HUB.ahk                    ← Entry point (loads everything)
-├── hub_core.ahk               ← Core GUI, hotkeys, AI chat (~2400 lines)
+├── hub_core.ahk               ← Core GUI, hotkeys, AI chat (~2500 lines)
 ├── modules/
 │   ├── manifest.ahk           ← Module loader
 │   ├── utilities_tab.ahk      ← Settings & utilities tab
@@ -28,18 +28,16 @@ AI-HUB.ahk                    ← Entry point (loads everything)
 │   ├── research_links.ahk     ← Research links integration
 │   ├── hotkey_menu.ahk        ← Hotkey management
 │   ├── autoclicker.ahk        ← Auto-clicker utility
-│   ├── overnight_ops.ahk      ← Scheduled operations
-│   └── *.html                 ← Web UIs (clipboard, prompts, links, dashboard)
+│   └── overnight_ops.ahk      ← Scheduled operations
+│
+; HTML panels live at ../pwa-panels/ (single source of truth, also served as PWAs)
 ├── clipboard/
 │   ├── Clipboard.ahk          ← Entry point (launched as subprocess)
 │   ├── clipboard_core.ahk     ← Data engine (history, pins, tags, aggregate)
 │   └── clipboard_gui.ahk      ← Native AHK GUI
 ├── clipsync-bridge/
-│   ├── sync_server.py          ← Python bridge server (localhost:3456)
+│   ├── sync_server.py          ← Python bridge server (localhost:3456, API only)
 │   ├── clipsync_bridge.ahk     ← Dynamic hotkey registration + launchers
-│   ├── clipboard.html          ← Skinny clipboard UI
-│   ├── prompt_picker.html      ← Prompt picker UI
-│   ├── research_links.html     ← Research links UI
 │   ├── start_bridge.bat        ← Server launcher (visible)
 │   └── start_bridge_silent.bat ← Server launcher (minimized, auto-start)
 ├── BetterTTS/
@@ -121,7 +119,7 @@ The Python server on `localhost:3456` exposes:
 | `/api/hotkeys` | GET | AHK-formatted hotkey map |
 | `/api/status` | GET | Health check |
 
-HTML pages served at `/`, `/links`, `/bookmarks`, `/clipboard`, `/clipboard2`.
+The HTML panels (clipboard3, prompt_picker, research_links, task-calendar, tts-engine, etc.) live in `../pwa-panels/` and are launched directly via `file://` URLs in `--app` mode. The server no longer serves HTML — it's API-only.
 
 ## License
 
