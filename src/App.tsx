@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDashboardStore } from '@/hooks/useDashboardStore';
+import { startSyncLoop } from '@/lib/sync';
 import { Shell } from '@/components/Shell';
 import { ClipboardView } from '@/views/ClipboardView';
 import { TTSView } from '@/views/TTSView';
@@ -30,6 +31,8 @@ const SHELL_VIEWS = [
 function App() {
   const store = useDashboardStore();
   const [activeView, setActiveView] = useState('clipboard');
+
+  useEffect(() => startSyncLoop(), []);
 
   if (!store.isLoaded) {
     return (
