@@ -38,7 +38,10 @@ global HOTKEY_FILE := CFG_DIR "\hotkeys.ini"
 global HOTSTR_FILE := CFG_DIR "\hotstrings.sav"
 global DATA_FILE := CFG_DIR "\storage.json"
 global CONFIG_FILE := CFG_DIR "\settings.ini"
-global PROMPTS_FILE := CFG_DIR "\prompts.json"
+; Canonical prompt store — single source of truth shared with
+; pwa-panels/prompt_picker.html and the React app (via sync_server seed).
+global PROMPTS_FILE := A_ScriptDir "\..\pwa-panels\data\prompts.json"
+global gPromptsCategoriesRaw := ""  ; preserved category block for round-trip
 
 global gItems := []               ; unified hotkey/hotstring list
 global gHKMap := Map()            ; hotkey -> item mapping
@@ -1000,8 +1003,9 @@ TestPromptWithClipboard(index) {
 }
 
 LoadPrompts() {
-    global gPrompts, PROMPTS_FILE
+    global gPrompts, PROMPTS_FILE, gPromptsCategoriesRaw
     gPrompts := []
+    gPromptsCategoriesRaw := ""
     if !FileExist(PROMPTS_FILE)
         return
     try {
@@ -1009,9 +1013,18 @@ LoadPrompts() {
         if jsonStr = "" || jsonStr = "[]"
             return
         jsonStr := Trim(jsonStr)
-        if SubStr(jsonStr, 1, 1) != "["
+        ; Canonical shape: { "version":1, "categories":[...], "prompts":[...] }
+        ; Legacy shape:    [ {...}, {...} ]
+        ; Preserve categories verbatim so SavePrompts can round-trip them.
+        if SubStr(jsonStr, 1, 1) = "{" {
+            if RegExMatch(jsonStr, 's)"categories"\s*:\s*(\[[\s\S]*?\])', &cm)
+                gPromptsCategoriesRaw := cm[1]
+        } else if SubStr(jsonStr, 1, 1) != "[" {
             return
-        pattern := '\{"name":"([^"]*)".*?"template":"((?:[^"\\]|\\.)*)"'
+        }
+        ; Match every prompt object — works for both shapes because the regex
+        ; is anchored by "name":"..." and "template":"..." with .*? between.
+        pattern := '\{[^{}]*?"name"\s*:\s*"([^"]*)"[\s\S]*?"template"\s*:\s*"((?:[^"\\]|\\.)*)"'
         pos := 1
         while RegExMatch(jsonStr, pattern, &m, pos) {
             ; Find the end of this object
@@ -1044,18 +1057,23 @@ LoadPrompts() {
 }
 
 SavePrompts() {
-    global gPrompts, PROMPTS_FILE
-    jsonStr := "["
+    global gPrompts, PROMPTS_FILE, gPromptsCategoriesRaw
+    promptsArr := ""
     for i, p in gPrompts {
-        jsonStr .= "`n  {"
-        jsonStr .= '"name":"' EscapeJSON(p.name) '", '
-        jsonStr .= '"template":"' EscapeJSON(p.template) '", '
-        jsonStr .= '"shortcut":"' (p.HasProp("shortcut") ? p.shortcut : "") '", '
-        jsonStr .= '"replace":' (p.replace ? "true" : "false") ', '
-        jsonStr .= '"popup":' (p.popup ? "true" : "false")
-        jsonStr .= "}" (i < gPrompts.Length ? "," : "")
+        promptsArr .= "`n    {"
+        promptsArr .= '"name":"' EscapeJSON(p.name) '", '
+        promptsArr .= '"template":"' EscapeJSON(p.template) '", '
+        promptsArr .= '"shortcut":"' (p.HasProp("shortcut") ? p.shortcut : "") '", '
+        promptsArr .= '"replace":' (p.replace ? "true" : "false") ', '
+        promptsArr .= '"popup":' (p.popup ? "true" : "false")
+        promptsArr .= "}" (i < gPrompts.Length ? "," : "")
     }
-    jsonStr .= "`n]"
+    ; Round-trip the canonical shape when we loaded one; otherwise stay
+    ; compatible with the legacy flat array layout.
+    if gPromptsCategoriesRaw != ""
+        jsonStr := "{`n  `"version`": 1,`n  `"categories`": " gPromptsCategoriesRaw ",`n  `"prompts`": [" promptsArr "`n  ]`n}"
+    else
+        jsonStr := "[" promptsArr "`n]"
     try FileDelete(PROMPTS_FILE)
     FileAppend(jsonStr, PROMPTS_FILE, "UTF-8")
 }
