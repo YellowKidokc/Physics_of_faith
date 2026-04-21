@@ -148,3 +148,66 @@ export function SearchView() {
 - Do NOT change the port numbers (3456 local, 8420 Bill)
 - Do NOT add user authentication — this is single-user, token-only
 - Do NOT use localStorage for data storage — use the API layer only
+
+
+---
+
+## PWA PANEL ARCHITECTURE (Added April 20, 2026)
+
+### Individual PWA Panels (in `pwa-panels/`)
+Each is a standalone HTML file that can be installed as an individual PWA:
+
+| Panel | File | Purpose |
+|-------|------|---------|
+| Clipboard | clipboard3.html | Clipboard history, slots, search, AI predictions |
+| TTS Engine | tts-engine.html | Text-to-speech — DO NOT TOUCH, it works |
+| Prompts | prompt_picker.html | Prompt library with categories and shortcuts |
+| Research | research.html | Deep research + crawling tools |
+| Task/Calendar | task-calendar.html | Task management and calendar |
+| Hub | hub.html | Central navigation hub |
+| Nexus Dashboard | nexus-dashboard.html | Dashboard view |
+| Theophysics Hub | theophysics-hub.html | Theophysics-specific command center |
+
+### Each panel talks to:
+- **Local:** sync_server.py on port 3456 (SQLite backend)
+- **Cloud:** Cloudflare Worker D1 API (when local unavailable)
+- **Bill:** localhost:8420 for AI predictions (clipboard, search ranking)
+
+### PWA Install Requirements
+Each panel should be installable as a standalone PWA. The manifest.webmanifest and sw.js already exist in pwa-panels/.
+
+## AI-HUB INTEGRATION (in `ai-hub/`)
+
+### What AI-HUB Does
+AutoHotkey v2 system that provides GLOBAL keyboard shortcuts on Windows:
+- `Ctrl+Alt+Z` = Prompt Menu (select text first)
+- `Ctrl+Space` = Smart Fix (grammar/spelling/coherence)
+- `Ctrl+Alt+G` = Show/Hide GUI
+- `Ctrl+Alt+A` = Quick AI Chat with selected text
+- `Ctrl+Shift+Q` = Save selection as Markdown
+
+### THE CONTRACT: Prompts Must Match
+When a prompt is created in the Prompts PWA (prompt_picker.html), it must also be available via AI-HUB hotkey. The source of truth is the prompts API (`/api/prompts`).
+
+**How it works:**
+1. User creates prompt in PWA (name: "Summarize", shortcut: "P/sum", template: "...")
+2. sync_server stores it in SQLite + pushes to Cloudflare D1
+3. AI-HUB reads from `config/prompts.json` (synced from the same API)
+4. User types shortcut anywhere on system → AI-HUB fires the prompt
+
+**Build requirement:** Add a sync mechanism so AI-HUB's `config/prompts.json` stays in sync with the `/api/prompts` endpoint. Either:
+- AI-HUB polls the API on startup and every 5 minutes
+- Or sync_server writes to both SQLite AND the AI-HUB config file on every prompt change
+
+### AI-HUB Files
+- `AI-HUB.ahk` — entry point, launches ClipSync Bridge + TTS
+- `hub_core.ahk` — main GUI, hotkeys, hotstrings, AI chat (2507 lines)
+- `config/prompts.json` — prompt library (must sync with API)
+- `config/hotkeys.ini` — keyboard shortcut definitions
+- `config/settings.ini` — user preferences
+- `modules/` — additional AHK modules
+
+## DO NOT TOUCH
+- tts-engine.html — it works
+- AI-HUB hotkey bindings (Ctrl+Alt+Z, Ctrl+Space, etc.) — muscle memory
+- Port numbers: 3456 (sync), 8420 (Bill)
