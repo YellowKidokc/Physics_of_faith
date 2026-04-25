@@ -247,8 +247,9 @@ export type ViewType =
   | 'prompts'
   | 'research'
   | 'calendar'
-  | 'custom'
+  | 'comms'
   | 'tts'
+  | 'custom'
   | 'deepcrawl'
   | 'search'
   | 'links';
