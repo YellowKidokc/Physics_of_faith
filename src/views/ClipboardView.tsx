@@ -139,9 +139,9 @@ export function ClipboardView() {
     slotBtn: { padding: '2px 0', flex: 1, border: '1px solid #1e1e2e', borderRadius: '3px', background: 'transparent', color: '#555', fontSize: '9px', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', transition: 'all .1s', letterSpacing: '.5px' },
     copyBtn: { background: 'rgba(96,208,255,.1)', borderColor: 'rgba(96,208,255,.3)', color: '#60d0ff' },
     saveBtn: { color: '#888' },
-    clipItem: (pinned: boolean) => ({ padding: '6px 8px', marginBottom: '3px', background: '#111118', border: `1px solid ${pinned ? 'rgba(251,191,36,.32)' : '#1e1e2e'}`, borderRadius: '5px', cursor: 'pointer', transition: 'all .08s', position: 'relative' as const, boxShadow: pinned ? 'inset 0 0 0 1px rgba(251,191,36,.12)' : 'none' }),
-    clipTitle: { fontSize: '11px', fontWeight: 600, color: '#eceef6', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '54px' },
-    clipDesc: { fontSize: '9px', lineHeight: '1.3', color: '#8f96ab', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' },
+    clipItem: (pinned: boolean) => ({ padding: '8px 10px', marginBottom: '5px', background: '#111118', border: `1px solid ${pinned ? 'rgba(251,191,36,.32)' : '#1e1e2e'}`, borderRadius: '5px', cursor: 'pointer', transition: 'all .08s', position: 'relative' as const, boxShadow: pinned ? 'inset 0 0 0 1px rgba(251,191,36,.12)' : 'none' }),
+    clipTitle: { fontSize: '13px', fontWeight: 700, color: '#eceef6', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '40px' },
+    clipDesc: { fontSize: '11px', lineHeight: '1.4', color: '#8f96ab', display: '-webkit-box' as const, WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden', wordBreak: 'break-word' as const, marginTop: '3px' },
     clipMeta: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px', marginTop: '4px' },
     clipTag: (pinned: boolean) => ({ padding: '1px 5px', border: `1px solid ${pinned ? 'rgba(251,191,36,.28)' : '#2a3145'}`, borderRadius: '999px', background: pinned ? 'rgba(251,191,36,.1)' : '#171b27', color: pinned ? '#fbbf24' : '#aeb7cb', fontSize: '8px', fontWeight: 600, letterSpacing: '.3px', maxWidth: '100px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }),
     clipTime: { fontSize: '8px', color: '#4f586f', whiteSpace: 'nowrap' as const },
@@ -162,7 +162,7 @@ export function ClipboardView() {
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden select-none" style={{ ...css.body, maxWidth: '300px', margin: '0', width: '100%', borderRight: '1px solid #1e1e2e' }}>
+    <div className="h-full flex flex-col overflow-hidden select-none" style={{ ...css.body, maxWidth: '200px', margin: '0', width: '100%', borderRight: '1px solid #1e1e2e' }}>
       {/* SEARCH BAR */}
       <div style={css.searchBar}>
         <div style={{ position: 'relative', flex: 1 }}>
@@ -251,7 +251,7 @@ export function ClipboardView() {
                     {clip.title || clip.content.split('\n')[0].slice(0, 60) || 'Untitled clip'}
                   </div>
                   <div style={css.clipDesc}>
-                    {clip.content.replace(/\s+/g, ' ').trim().slice(0, 120) || 'No description'}
+                    {clip.content.replace(/\s+/g, ' ').trim().slice(0, 280) || 'No description'}
                   </div>
                   <div style={css.clipMeta}>
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', minWidth: 0 }}>
@@ -299,7 +299,7 @@ export function ClipboardView() {
             ) : (
               predictions.map((p, i) => {
                 const title = (p.content || '').split('\n')[0].slice(0, 60) || 'prediction';
-                const preview = (p.content || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+                const preview = (p.content || '').replace(/\s+/g, ' ').trim().slice(0, 280);
                 return (
                   <div key={i} style={css.clipItem(false)}
                     onClick={async () => {
@@ -339,7 +339,7 @@ export function ClipboardView() {
                     {clip.title || clip.content.split('\n')[0].slice(0, 60) || 'Saved clip'}
                   </div>
                   <div style={css.clipDesc}>
-                    {clip.content.replace(/\s+/g, ' ').trim().slice(0, 120) || 'No description'}
+                    {clip.content.replace(/\s+/g, ' ').trim().slice(0, 280) || 'No description'}
                   </div>
                   <div style={css.clipMeta}>
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', minWidth: 0 }}>
