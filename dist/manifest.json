@@ -1,12 +1,13 @@
 {
+  "id": "pof-dashboard",
   "name": "POF 2828 Dashboard",
   "short_name": "POF 2828",
   "description": "Personal productivity hub — clipboard, notes, tasks, axioms, prompts, AI",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#09090b",
-  "theme_color": "#09090b",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
   "orientation": "any",
   "icons": [
     {

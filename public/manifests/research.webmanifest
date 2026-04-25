@@ -1,0 +1,16 @@
+{
+  "id": "pof-research",
+  "name": "POF Research",
+  "short_name": "Research",
+  "description": "POF 2828 — research workspace",
+  "start_url": "../#/panel/research",
+  "scope": "../",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#4F8EF7",
+  "orientation": "any",
+  "icons": [
+    { "src": "../icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "../icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

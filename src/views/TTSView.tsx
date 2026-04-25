@@ -14,6 +14,7 @@ const FILTERS: { id: string; label: string; desc: string; fn: (t: string) => str
 ];
 
 const STORAGE_KEY = 'pof2828_tts';
+const DEFAULT_VOICE = 'BrianMultilingual';
 
 export function TTSView() {
   const synth = useRef(window.speechSynthesis);
@@ -28,12 +29,35 @@ export function TTSView() {
     new Set(FILTERS.filter(f => f.default).map(f => f.id))
   );
   const [tab, setTab] = useState<'speak' | 'filters' | 'voice'>('speak');
+  const voiceResolved = useRef(false);
 
-  // Load voices
+  // Find voice index by name substring (case-insensitive)
+  const findVoiceByName = (list: SpeechSynthesisVoice[], name: string): number => {
+    const lower = name.toLowerCase();
+    const idx = list.findIndex(v => v.name.toLowerCase().includes(lower));
+    return idx >= 0 ? idx : 0;
+  };
+
+  // Load voices + resolve saved/default voice by name
   useEffect(() => {
     const load = () => {
       const v = synth.current.getVoices();
-      if (v.length) setVoices(v);
+      if (!v.length) return;
+      setVoices(v);
+
+      if (!voiceResolved.current) {
+        voiceResolved.current = true;
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+          const targetName = saved.voiceName || DEFAULT_VOICE;
+          setVoiceIdx(findVoiceByName(v, targetName));
+          if (saved.rate != null) setRate(saved.rate);
+          if (saved.volume != null) setVolume(saved.volume);
+          if (saved.filters) setActiveFilters(new Set(saved.filters));
+        } catch {
+          setVoiceIdx(findVoiceByName(v, DEFAULT_VOICE));
+        }
+      }
     };
     load();
     if (synth.current.onvoiceschanged !== undefined) {
@@ -41,20 +65,10 @@ export function TTSView() {
     }
   }, []);
 
-  // Restore saved config
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-      if (saved.voiceIdx != null) setVoiceIdx(saved.voiceIdx);
-      if (saved.rate != null) setRate(saved.rate);
-      if (saved.volume != null) setVolume(saved.volume);
-      if (saved.filters) setActiveFilters(new Set(saved.filters));
-    } catch {}
-  }, []);
-
   const saveConfig = () => {
+    const voiceName = voices[voiceIdx]?.name || DEFAULT_VOICE;
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      voiceIdx, rate, volume, filters: [...activeFilters]
+      voiceName, rate, volume, filters: [...activeFilters]
     }));
   };
 
@@ -101,7 +115,7 @@ export function TTSView() {
   };
 
   const [downloading, setDownloading] = useState(false);
-  const [edgeVoice, setEdgeVoice] = useState('en-US-AriaNeural');
+  const [edgeVoice, setEdgeVoice] = useState('en-US-BrianMultilingualNeural');
 
   // Edge TTS voice options for download
   const EDGE_VOICES = [
@@ -275,15 +289,18 @@ export function TTSView() {
             </div>
 
             {cleanedText && (
-              <div>
-                <label className="text-[10px] font-bold tracking-widest text-green-400 uppercase mb-1 block">Cleaned Output</label>
+              <details className="group">
+                <summary className="text-[10px] font-bold tracking-widest text-green-400 uppercase cursor-pointer select-none flex items-center gap-1 hover:text-green-300 transition-colors list-none">
+                  <span className="text-green-400/60 group-open:rotate-90 transition-transform text-xs">&#9654;</span>
+                  Cleaned Output
+                  <button onClick={(e) => { e.preventDefault(); navigator.clipboard.writeText(cleanedText); }}
+                    className="ml-auto px-2 py-0.5 rounded text-[10px] font-bold bg-card border border-border text-muted-foreground hover:text-foreground">
+                    <Copy className="w-3 h-3 inline mr-1" />COPY
+                  </button>
+                </summary>
                 <textarea value={cleanedText} readOnly
-                  className="w-full min-h-[80px] bg-card border border-border rounded-md p-3 text-sm text-green-400 resize-y font-mono" />
-                <button onClick={() => navigator.clipboard.writeText(cleanedText)}
-                  className="mt-1 px-3 py-1 rounded text-[10px] font-bold bg-card border border-border text-muted-foreground hover:text-foreground">
-                  <Copy className="w-3 h-3 inline mr-1" /> COPY
-                </button>
-              </div>
+                  className="w-full min-h-[80px] bg-card border border-border rounded-md p-3 text-sm text-green-400 resize-y font-mono mt-2" />
+              </details>
             )}
           </>
         )}

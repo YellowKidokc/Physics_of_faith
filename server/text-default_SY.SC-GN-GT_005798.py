@@ -8,6 +8,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from datetime import datetime
 from pathlib import Path
+import urllib.request
 
 PORT = 3456
 BASE = Path(__file__).parent
@@ -144,6 +145,17 @@ def clipboard_monitor():
                                     (cid, text, now, now, now)
                                 )
                                 DB.commit()
+                            # Feed Bill
+                            try:
+                                bil_data = json.dumps({"text": text, "app": "clipboard_monitor"}).encode()
+                                req = urllib.request.Request(
+                                    "http://localhost:8420/bil/clipboard",
+                                    data=bil_data,
+                                    headers={"Content-Type": "application/json"},
+                                )
+                                urllib.request.urlopen(req, timeout=1)
+                            except Exception:
+                                pass  # Bill might not be running
                 finally:
                     user32.CloseClipboard()
         except Exception:

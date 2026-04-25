@@ -235,19 +235,23 @@ export interface AiStreamCallbacks {
 }
 
 // ─── VIEW TYPES ───
-export type ViewType = 
-  | 'dashboard' 
-  | 'clipboard' 
-  | 'files' 
-  | 'tags' 
-  | 'notes' 
-  | 'ai' 
+export type ViewType =
+  | 'dashboard'
+  | 'clipboard'
+  | 'files'
+  | 'tags'
+  | 'notes'
+  | 'ai'
   | 'settings'
   | 'axioms'
   | 'prompts'
   | 'research'
   | 'calendar'
-  | 'custom';
+  | 'custom'
+  | 'tts'
+  | 'deepcrawl'
+  | 'search'
+  | 'links';
 
 export interface ViewConfig {
   id: ViewType;

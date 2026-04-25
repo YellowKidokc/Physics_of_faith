@@ -1,5 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useClipsAPI } from '@/hooks/useAPI';
+
+const BIL_URL = 'http://localhost:8420';
+
+interface BilPrediction {
+  content: string;
+  score?: number;
+  reason?: string;
+  source?: string;
+}
 
 export function ClipboardView() {
   const { clips, fetchClips, createClip, updateClip, deleteClip } = useClipsAPI();
@@ -11,12 +20,44 @@ export function ClipboardView() {
   const [currentPage, setCurrentPage] = useState(0);
   const [pin1Active, setPin1Active] = useState(true);
   const [pin2Active, setPin2Active] = useState(false);
+  const [predictions, setPredictions] = useState<BilPrediction[]>([]);
+  const [bilOnline, setBilOnline] = useState(false);
+  const [predictLoading, setPredictLoading] = useState(false);
 
   useEffect(() => {
     fetchClips();
     const interval = setInterval(fetchClips, 2000);
     return () => clearInterval(interval);
   }, [fetchClips]);
+
+  const fetchPredictions = useCallback(async () => {
+    setPredictLoading(true);
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 2000);
+      const res = await fetch(`${BIL_URL}/bil/clipboard/predict`, { signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error('bad status');
+      const data = await res.json();
+      const items: BilPrediction[] = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.predictions)
+          ? data.predictions
+          : [];
+      setPredictions(items);
+      setBilOnline(true);
+    } catch {
+      setBilOnline(false);
+    }
+    setPredictLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (tab !== 'ai') return;
+    fetchPredictions();
+    const interval = setInterval(fetchPredictions, 5000);
+    return () => clearInterval(interval);
+  }, [tab, fetchPredictions]);
 
   const MAX_SLOTS = 50;
   const SLOTS_PER_PAGE = 20;
@@ -98,9 +139,9 @@ export function ClipboardView() {
     slotBtn: { padding: '2px 0', flex: 1, border: '1px solid #1e1e2e', borderRadius: '3px', background: 'transparent', color: '#555', fontSize: '9px', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', transition: 'all .1s', letterSpacing: '.5px' },
     copyBtn: { background: 'rgba(96,208,255,.1)', borderColor: 'rgba(96,208,255,.3)', color: '#60d0ff' },
     saveBtn: { color: '#888' },
-    clipItem: (pinned: boolean) => ({ padding: '6px 8px', marginBottom: '3px', background: '#111118', border: `1px solid ${pinned ? 'rgba(251,191,36,.32)' : '#1e1e2e'}`, borderRadius: '5px', cursor: 'pointer', transition: 'all .08s', position: 'relative' as const, boxShadow: pinned ? 'inset 0 0 0 1px rgba(251,191,36,.12)' : 'none' }),
-    clipTitle: { fontSize: '11px', fontWeight: 600, color: '#eceef6', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '54px' },
-    clipDesc: { fontSize: '9px', lineHeight: '1.3', color: '#8f96ab', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' },
+    clipItem: (pinned: boolean) => ({ padding: '8px 10px', marginBottom: '5px', background: '#111118', border: `1px solid ${pinned ? 'rgba(251,191,36,.32)' : '#1e1e2e'}`, borderRadius: '5px', cursor: 'pointer', transition: 'all .08s', position: 'relative' as const, boxShadow: pinned ? 'inset 0 0 0 1px rgba(251,191,36,.12)' : 'none' }),
+    clipTitle: { fontSize: '13px', fontWeight: 700, color: '#eceef6', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '40px' },
+    clipDesc: { fontSize: '11px', lineHeight: '1.4', color: '#8f96ab', display: '-webkit-box' as const, WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden', wordBreak: 'break-word' as const, marginTop: '3px' },
     clipMeta: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px', marginTop: '4px' },
     clipTag: (pinned: boolean) => ({ padding: '1px 5px', border: `1px solid ${pinned ? 'rgba(251,191,36,.28)' : '#2a3145'}`, borderRadius: '999px', background: pinned ? 'rgba(251,191,36,.1)' : '#171b27', color: pinned ? '#fbbf24' : '#aeb7cb', fontSize: '8px', fontWeight: 600, letterSpacing: '.3px', maxWidth: '100px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }),
     clipTime: { fontSize: '8px', color: '#4f586f', whiteSpace: 'nowrap' as const },
@@ -121,7 +162,7 @@ export function ClipboardView() {
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden select-none" style={{ ...css.body, maxWidth: '360px', margin: '0', width: '100%', borderRight: '1px solid #1e1e2e' }}>
+    <div className="h-full flex flex-col overflow-hidden select-none" style={{ ...css.body, maxWidth: '200px', margin: '0', width: '100%', borderRight: '1px solid #1e1e2e' }}>
       {/* SEARCH BAR */}
       <div style={css.searchBar}>
         <div style={{ position: 'relative', flex: 1 }}>
@@ -210,7 +251,7 @@ export function ClipboardView() {
                     {clip.title || clip.content.split('\n')[0].slice(0, 60) || 'Untitled clip'}
                   </div>
                   <div style={css.clipDesc}>
-                    {clip.content.replace(/\s+/g, ' ').trim().slice(0, 120) || 'No description'}
+                    {clip.content.replace(/\s+/g, ' ').trim().slice(0, 280) || 'No description'}
                   </div>
                   <div style={css.clipMeta}>
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', minWidth: 0 }}>
@@ -233,13 +274,53 @@ export function ClipboardView() {
           </div>
         )}
 
-        {/* TAB 3: AI */}
+        {/* TAB 3: AI — Bill predictions */}
         {tab === 'ai' && (
           <div style={{ flex: 1, overflowY: 'auto', padding: '4px' }}>
-            <div style={css.emptyState}>
-              <div style={{ fontSize: '11px', letterSpacing: '2px' }}>AI QUICK ACCESS</div>
-              <div style={{ fontSize: '10px', color: '#1e1e2e' }}>use Ctrl+Alt+A for full AI chat</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 4px 6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '9px', letterSpacing: '1px', color: bilOnline ? '#10b981' : '#ef4444' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: bilOnline ? '#10b981' : '#ef4444', boxShadow: bilOnline ? '0 0 4px rgba(16,185,129,0.5)' : 'none' }} />
+                BIL {bilOnline ? 'ONLINE' : 'OFFLINE'}
+              </div>
+              <button onClick={fetchPredictions} disabled={predictLoading}
+                style={{ background: 'transparent', border: '1px solid #1e1e2e', borderRadius: '3px', color: '#888', padding: '2px 8px', fontSize: '9px', fontWeight: 700, letterSpacing: '1px', fontFamily: 'inherit', cursor: 'pointer' }}>
+                {predictLoading ? '...' : 'REFRESH'}
+              </button>
             </div>
+            {predictions.length === 0 ? (
+              <div style={css.emptyState}>
+                <div style={{ fontSize: '11px', letterSpacing: '2px' }}>
+                  {bilOnline ? 'NO PREDICTIONS' : 'BIL OFFLINE'}
+                </div>
+                <div style={{ fontSize: '10px', color: '#1e1e2e', textAlign: 'center' }}>
+                  {bilOnline ? 'copy something to train Bill' : 'start bil_server on :8420'}
+                </div>
+              </div>
+            ) : (
+              predictions.map((p, i) => {
+                const title = (p.content || '').split('\n')[0].slice(0, 60) || 'prediction';
+                const preview = (p.content || '').replace(/\s+/g, ' ').trim().slice(0, 280);
+                return (
+                  <div key={i} style={css.clipItem(false)}
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(p.content);
+                      showToast('COPIED');
+                    }}>
+                    <div style={css.clipTitle}>{title}</div>
+                    {preview && <div style={css.clipDesc}>{preview}</div>}
+                    <div style={css.clipMeta}>
+                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', minWidth: 0 }}>
+                        {p.reason && <span style={css.clipTag(false)}>{p.reason}</span>}
+                        {p.source && <span style={css.clipTag(false)}>{p.source}</span>}
+                      </div>
+                      {typeof p.score === 'number' && (
+                        <span style={css.clipTime}>{p.score.toFixed(2)}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         )}
 
@@ -258,7 +339,7 @@ export function ClipboardView() {
                     {clip.title || clip.content.split('\n')[0].slice(0, 60) || 'Saved clip'}
                   </div>
                   <div style={css.clipDesc}>
-                    {clip.content.replace(/\s+/g, ' ').trim().slice(0, 120) || 'No description'}
+                    {clip.content.replace(/\s+/g, ' ').trim().slice(0, 280) || 'No description'}
                   </div>
                   <div style={css.clipMeta}>
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', minWidth: 0 }}>
