@@ -1,0 +1,55 @@
+5197616 Good
+eb8a084 Good
+bf466be Merge pull request #4 from YellowKidokc/claude/unified-dashboard-pwa-YvRs3
+0147650 [TASK-3] Cloudflare D1 sync — Worker + client orchestrator
+1f73f50 [TASK-4] Unified installer — install.bat at repo root
+e978686 [TASK-5] Unify prompts data source — pwa-panels/data/prompts.json
+f463f67 [TASK-2] Strip dead code from App.tsx, extract SettingsView
+5cfcb8b [TASK-1] Single-source HTML panels to pwa-panels/
+98af2ad Merge pull request #3 from YellowKidokc/claude/unified-dashboard-pwa-YvRs3
+33d688b Merge branch 'master' into claude/unified-dashboard-pwa-YvRs3
+62945db feat: installable child PWAs (Clipboard/TTS/Prompts/Research/Links)
+81f81f3 docs: mark narrow clipboard, Bill wiring, DeepCrawl, Search as done
+281e00a Merge branch 'master' of https://github.com/YellowKidokc/Physics_of_faith
+340ac33 Good
+347a7ce Merge pull request #2 from YellowKidokc/claude/unified-dashboard-pwa-YvRs3
+36435d1 chore: rebuild dist/index.html with new asset hashes
+3f26b88 feat: narrow clipboard, wire Bill predictions, add DeepCrawl + Search views
+8c8991b Good
+4cad8d5 Good
+510e64b Good
+4101658 good
+3fca02d fix: add TTS view type and missing dependencies for build
+5568f88 fix: lock TTS defaults to BrianMultilingual + collapse cleaned output
+ef45e63 style: narrow clipboard panel pinned to left side
+66f0ad3 style: compact ClipboardView to match PromptsView density
+d9e5832 fix: address code review — XSS escape, toggleTask side effect, remove confirm()
+07b38e0 feat: extract NotesView to src/views/ with useNotesAPI hook
+8855581 feat: extract CalendarView to src/views/ with useTasksAPI hook
+f1dc42d feat: extract ResearchView to src/views/ with useBookmarksAPI hook
+97cc25f feat: extract PromptsView to src/views/ with usePromptsAPI hook
+90b0bd6 feat: add API hooks for prompts, bookmarks, tasks, and notes
+5177b0b feat: add prompts, tasks, projects tables and CRUD endpoints to sync server
+7daabe3 feat: Phase 1 complete — installable PWA with clipboard, TTS, and sync server
+d91d739 fix: resolve unused variable warnings for production build
+383e5f9 feat: add sync_server.py with clipboard monitor and notes table
+c64e488 feat: integrate responsive Shell, use extracted ClipboardView and TTSView
+8339d8d refactor: move TTSView to views directory
+b38e801 feat: extract ClipboardView to own file with API hook
+10d8815 feat: add responsive Shell with collapsible sidebar and mobile bottom bar
+5cb0e0f feat: add SyncStatus indicator component
+1aa26cb feat: add API client with local/cloud fallback and sync status hook
+7288bd4 feat: add ClipSync theme CSS variables and fonts
+1dd0039 deploy: update to Kimi Agent v2 build
+a95e49d feat: add Codex build spec, Firebase setup guide, and .gitignore
+73df614 feat: redesign clipboard cards — bigger buttons, share, thumb-friendly layout
+5e50395 fix: axiom view — list collapses on mobile when detail is selected
+0b962b9 feat: mobile top bar + bottom nav for thumb-friendly navigation
+18e8601 fix: mobile-responsive sidebar — hamburger menu on small screens
+e67de87 feat: add PWA support — manifest, service worker, icons
+c9140f3 fix: restore handleNavigate definition removed by upstream merge
+fae3bdb Merge branch 'master' of https://github.com/YellowKidokc/pof2828-dashboard
+ae1d162 feat: AI control panel, research search workspace, and page builder
+0761cd4 Merge pull request #1 from YellowKidokc/codex/build-dashboard-ai-panel-features
+729983b Add local AI panel and smart search/page builder UX
+38eac46 Initial commit: Kimi POF2828 Dashboard - Vite + React + TypeScript + shadcn/ui

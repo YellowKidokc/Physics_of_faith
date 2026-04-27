@@ -1,0 +1,25 @@
+e978686 [TASK-5] Unify prompts data source — pwa-panels/data/prompts.json
+ai-hub/config/prompts.json
+5cfcb8b [TASK-1] Single-source HTML panels to pwa-panels/
+ai-hub/modules/clipboard3.html
+ai-hub/modules/nexus-dashboard.html
+ai-hub/modules/prompt_picker.html
+ai-hub/modules/task-calendar.html
+ai-hub/modules/theophysics-hub.html
+5568f88 fix: lock TTS defaults to BrianMultilingual + collapse cleaned output
+dist/assets/index-BMMzQDf9.css
+dist/assets/index-CIm_5RNk.js
+1dd0039 deploy: update to Kimi Agent v2 build
+dist/assets/index-DkT8GxuU.css
+dist/assets/index-dhYE_H9v.js
+73df614 feat: redesign clipboard cards — bigger buttons, share, thumb-friendly layout
+dist/assets/index-DFJynqtU.css
+5e50395 fix: axiom view — list collapses on mobile when detail is selected
+dist/assets/index-QzF4JXSi.css
+0b962b9 feat: mobile top bar + bottom nav for thumb-friendly navigation
+dist/assets/index-Vt8cP1aQ.css
+18e8601 fix: mobile-responsive sidebar — hamburger menu on small screens
+dist/assets/index-DVDFIUvk.css
+ae1d162 feat: AI control panel, research search workspace, and page builder
+dist/assets/index-BMMzQDf9.css
+dist/assets/index-CIm_5RNk.js

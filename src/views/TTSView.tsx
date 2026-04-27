@@ -45,19 +45,39 @@ export function TTSView() {
       if (!v.length) return;
       setVoices(v);
 
-      if (!voiceResolved.current) {
+      // Re-resolve every time onvoiceschanged fires.
+      // Edge loads SAPI voices instantly but neural voices stream in
+      // asynchronously over the network. We only "lock" the voice when
+      // the actual saved voice has arrived in the list — never fall
+      // back to index 0 (the robot trap).
+      let saved: { voiceName?: string; rate?: number; volume?: number; filters?: string[] } = {};
+      try {
+        saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      } catch { saved = {}; }
+
+      const targetName = saved.voiceName || DEFAULT_VOICE;
+      const exactIdx = v.findIndex(voice =>
+        voice.name.toLowerCase().includes(targetName.toLowerCase())
+      );
+
+      if (exactIdx >= 0) {
+        // Saved voice is in the list — lock it in.
+        setVoiceIdx(exactIdx);
         voiceResolved.current = true;
-        try {
-          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-          const targetName = saved.voiceName || DEFAULT_VOICE;
-          setVoiceIdx(findVoiceByName(v, targetName));
-          if (saved.rate != null) setRate(saved.rate);
-          if (saved.volume != null) setVolume(saved.volume);
-          if (saved.filters) setActiveFilters(new Set(saved.filters));
-        } catch {
-          setVoiceIdx(findVoiceByName(v, DEFAULT_VOICE));
-        }
+        // Apply non-voice prefs (idempotent).
+        if (saved.rate != null) setRate(saved.rate);
+        if (saved.volume != null) setVolume(saved.volume);
+        if (saved.filters) setActiveFilters(new Set(saved.filters));
+      } else if (!voiceResolved.current) {
+        // Saved voice not loaded yet AND we haven't locked anything.
+        // Hold position — do NOT fall back to voice 0. Wait for the
+        // next onvoiceschanged event to re-check. Still apply other
+        // prefs so rate/volume/filters are correct on first paint.
+        if (saved.rate != null) setRate(saved.rate);
+        if (saved.volume != null) setVolume(saved.volume);
+        if (saved.filters) setActiveFilters(new Set(saved.filters));
       }
+      // else: voice already locked from a previous load() call. No-op.
     };
     load();
     if (synth.current.onvoiceschanged !== undefined) {
