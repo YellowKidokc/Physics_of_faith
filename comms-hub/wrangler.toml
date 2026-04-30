@@ -7,6 +7,14 @@ binding = "DB"
 database_name = "comms"
 database_id = "<fill in after creating>"
 
+[[durable_objects.bindings]]
+name = "MCP_SESSION"
+class_name = "McpSession"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["McpSession"]
+
 [[routes]]
 pattern = "comms.dlowehomelab.com/*"
 zone_name = "dlowehomelab.com"
