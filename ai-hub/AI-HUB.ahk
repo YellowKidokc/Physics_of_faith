@@ -42,3 +42,19 @@ LaunchStartupPanels() {
 
 ; Clipboard ingestion now lives in Python (sync_server.py).
 ; Keep AHK focused on GUI, hotkeys, and OS-level actions.
+
+
+; Startup service checks
+try {
+    activeClipboard := IniRead(A_ScriptDir "\config\services.ini", "CLIPBOARD", "active", "local")
+    if (activeClipboard = "local")
+        Run(A_ScriptDir "\sync_server.py", , "Hide")
+}
+try {
+    commsActive := IniRead(A_ScriptDir "\config\services.ini", "COMMS", "active", "cloud")
+    commsUrl := IniRead(A_ScriptDir "\config\services.ini", "COMMS", commsActive, "")
+    http := ComObject("WinHttp.WinHttpRequest.5.1")
+    http.Open("GET", commsUrl, true)
+    http.Send()
+}
+^!a::Run(A_ScriptDir "\modules\app_launcher.html")

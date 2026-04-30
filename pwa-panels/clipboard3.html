@@ -131,3 +131,9 @@ function switchTab(name){
   setTab(name);
 }
 </script></body></html>
+
+<!-- Export to Single HTML -->
+<button id="exportSingleHtml">Export to Single HTML</button>
+<script>
+document.getElementById("exportSingleHtml")?.addEventListener("click", async ()=>{const r=await fetch("/export/html");const html=await r.text();const blob=new Blob([html],{type:"text/html"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="clipboard-standalone.html";a.click();});
+</script>
