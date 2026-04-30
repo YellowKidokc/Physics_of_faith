@@ -502,3 +502,6 @@ function openFile(path){fetch(API+'/files/open',{method:'POST',headers:{'Content
 </script>
 </body>
 </html>
+
+<section id="crawl-queue"><h3>Crawl Queue</h3><input id="crawlUrl" placeholder="Paste URL"><button id="addCrawl">Add to Crawl</button><div id="crawlerStatus">Crawler offline</div><div id="crawlResults"></div></section><script>const crawler="https://crawler.dlowehomelab.com";async function loadCrawl(){try{const r=await fetch(crawler+"/results?limit=20");const j=await r.json();document.getElementById("crawlerStatus").textContent="Crawler online";document.getElementById("crawlResults").innerHTML=j.map(x=>`<div><b>${x.title||"Untitled"}</b> <a href="${x.url}" target="_blank">${x.url}</a><p>${x.summary||""}</p><button onclick="saveBookmark(\"${x.url}\",\"${(x.title||"").replace(/"/g,"")}\")">Save as Bookmark</button></div>`).join("");}catch{document.getElementById("crawlerStatus").textContent="Crawler offline";}}
+document.getElementById("addCrawl")?.addEventListener("click",async()=>{const url=document.getElementById("crawlUrl").value;await fetch(crawler+"/queue",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url,source:"hub"})});loadCrawl();});</script>

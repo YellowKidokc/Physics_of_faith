@@ -31,3 +31,5 @@
 #include bettertts_tab.ahk
 
 ; NOTE: Clipboard Manager now lives in .\clipboard\ as a standalone app
+
+#include settings_tab.ahk

@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset='utf-8'><title>App Launcher</title><style>:root{--bg:#08080c;--surface:#0e0e14;--gold:#e8a912;--text:#b8bcc6}body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;margin:0;padding:16px}.tabs button{background:var(--surface);color:var(--text);border:1px solid #2a2a33;border-radius:8px;padding:8px 12px;margin-right:6px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:12px}.tile{background:var(--surface);border:1px solid #2a2a33;border-radius:8px;padding:12px;cursor:pointer}.url{font-size:12px;color:#8b90a0}.dot{float:right;color:#c33}</style></head><body>
+<div class='tabs'><button onclick='showTab("apps")'>Apps</button><button onclick='showTab("cloudflare")'>Cloudflare</button></div>
+<div id='apps' class='grid'></div><div id='cloudflare' class='grid' style='display:none'></div>
+<script>
+const apps=[['Search','https://search.dlowehomelab.com','🔍'],['Deep Crawler','https://crawler.dlowehomelab.com','🕷️'],['Comms','https://comms.dlowehomelab.com','📡'],['Ollama','https://ollama.dlowehomelab.com','🧠'],['BIL Dashboard','https://brain.dlowehomelab.com','⚡'],['Treaties','http://localhost:8000','📜'],['Clipboard','https://clipboard.dlowehomelab.com','📋'],['NAS (Synology)','http://192.168.1.177:5000','💾'],['n8n','http://192.168.1.177:5678','⚙️'],['Cloudflare Pages','https://dash.cloudflare.com','☁️']];
+function tile(name,url,icon){const d=document.createElement('div');d.className='tile';d.innerHTML=`<div>${icon} ${name}<span class='dot'>●</span></div><div class='url'>${url}</div>`;d.onclick=()=>window.open(url,'_blank');d.oncontextmenu=(e)=>{e.preventDefault();const n=prompt('Edit URL',url);if(n) d.querySelector('.url').textContent=n;};return d;}
+apps.forEach(a=>appsEl().appendChild(tile(...a)));function appsEl(){return document.getElementById('apps')}
+async function loadCF(){try{const r=await fetch('/config/cloudflare_pages');const pages=await r.json();const el=document.getElementById('cloudflare');el.innerHTML='';pages.forEach(p=>el.appendChild(tile(p.name,p.url,'☁️')));}catch{}}
+loadCF();
+function showTab(id){document.getElementById('apps').style.display=id==='apps'?'grid':'none';document.getElementById('cloudflare').style.display=id==='cloudflare'?'grid':'none';}
+</script></body></html>
