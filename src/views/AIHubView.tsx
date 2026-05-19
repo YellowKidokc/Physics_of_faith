@@ -17,9 +17,7 @@ interface ChannelInfo {
 }
 
 // ─── CONFIG ───
-const COMMS_API = 'https://theophysics-comms.davidokc28.workers.dev/api';
-// Once you add a custom domain, change to:
-// const COMMS_API = 'https://comms.faiththruphysics.com/api';
+const COMMS_API = 'https://comms.dlowehomelab.com/api';
 
 const CHANNELS = ['general', 'opus', 'gemini', 'gpt', 'codex', 'kimi', 'cowork'];
 
